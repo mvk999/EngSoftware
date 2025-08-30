@@ -1,0 +1,12 @@
+.Container{
+    width: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+.LeftContainer{
+    width: 70%;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+}
