@@ -1,1 +1,0 @@
-#1 versão p/ documentação
