@@ -48,3 +48,7 @@ Atualmente, estão sendo implementadas as camadas de **frontend em React** e **b
 
 ## 🧑‍💻 Equipe de Desenvolvimento
 Projeto desenvolvido para fins acadêmicos, com foco na aplicação prática de tecnologias web modernas.
+Pelos Alunos:
+Marcos Vinícius Pereira
+Arthur Soares Marques
+Diego Alves Oliveira
