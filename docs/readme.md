@@ -1,150 +1,33 @@
-# 📚 Documentação do Projeto – EngSoftware
+# Projeto: Especificação de Requisitos (ERS) - Vought Tech E-commerce
 
-Este diretório (`docs/`) contém toda a **documentação do projeto** em Markdown, organizada para uso no **Obsidian** (ou direto pelo GitHub).
+Este repositório contém o documento formal de **Especificação de Requisitos de Software (ERS)** para um sistema fictício de e-commerce de produtos de tecnologia, a "Vought Tech". Arquivo nomeado como "RequisitosRFeRNF
 
----
+## 1. Objetivo do Documento
 
-## 🗂 Estrutura
+O objetivo deste documento é definir e catalogar formalmente todos os requisitos funcionais, não-funcionais e regras de negócio necessárias para guiar o desenvolvimento do software. Ele serve como a "fonte da verdade" para a equipe de desenvolvimento e stakeholders, garantindo que o produto final atenda a todos os critérios definidos.
 
-docs/
-│── README.md
-│── Requisitos.md
-│── HistoriasUsuario.md
-│── templates/
-││ ├── HU_template.md
-││ └── TelaFigma_template.md
-│── sprints/
-││ ├── Sprint1/
-││ │ ├── HU01.md
-││ │ ├── HU02.md
-││ │ ├── HU03.md
-││ │ └── HU04.md
-││ └── Sprint2/
-││ ├── HU05.md
-││ ├── HU06.md
-││ ├── HU07.md
-││ └── HU08.md
-│── figma/
-│ ├── TelaLogin.md
-│ ├── TelaCatalogoProdutos.md
-│ ├── TelaCadastroUsuario.md
-│ └── TelaDetalhesProduto.md
 
-yaml
-Copiar código
+## 2. Autores
 
-- **`Requisitos.md`**: requisitos funcionais e não funcionais.
-- **`HistoriasUsuario.md`**: índice com links para todas as HUs.
-- **`sprints/`**: HUs organizadas por sprint.
-- **`figma/`**: páginas com links e notas das telas do Figma.
-- **`templates/`**: modelos prontos para duplicar.
+* Marcos Vinícius Pereira
+* Arthur Soares Marques
+* Diego Alves Oliveira
 
----
+## 3. Escopo do Sistema (Vought Tech)
 
-## 🔧 Abrir no Obsidian
+O sistema de e-commerce definido neste ERS inclui as seguintes funcionalidades principais:
 
-1. Obsidian → **Abrir pasta como Vault** → selecione `docs/`.
-2. Use o **Graph View** para navegar (HUs linkam para requisitos e telas do Figma).
+* **Gerenciamento de Contas:** Cadastro, login (obrigatório) e recuperação de senha para Clientes e Administradores.
+* **Catálogo de Produtos:** Gerenciamento CRUD de Categorias e Produtos.
+* **Jornada de Compra (Estética):** Funcionalidades de busca, filtro, carrinho de compras e um checkout simulado (sem processamento de pagamento real).
+* **Painel Administrativo:** Interface para administradores processarem pedidos (dando baixa no estoque) e gerenciarem o catálogo.
 
----
+## 4. Estrutura do Documento ERS
 
-## ✍️ Como criar uma nova HU
+O documento `.pdf` está estruturado para atender a diretrizes específicas de Engenharia de Software, incluindo:
 
-1. Duplique `templates/HU_template.md`.
-2. Renomeie para `sprints/SprintX/HUYY.md` (ex.: `sprints/Sprint1/HU04.md`).
-3. Preencha os campos.
-4. Adicione o link em `HistoriasUsuario.md`.
-
----
-
-## 🧩 Convenções
-
-- **IDs de HU**: `HU01`, `HU02`, …
-- **Commits**: mensagens claras, ex.: `📝 HU03: critérios de aceite`.
-- **Links internos**: use `[[HU01]]`, `[[TelaLogin]]`, `[[Requisitos]]` para o Obsidian montar o grafo.
-
----
-
-## ⚠️ Sobre o `.obsidian/`
-
-- Ignore workspace e plugins para evitar conflitos entre máquinas.
-- Já há um `.gitignore` específico em `docs/.gitignore`.
-
----
-docs/Requisitos.md
-markdown
-Copiar código
-# 📄 Requisitos
-
-> Documento base de requisitos do sistema.
-
-## 1. Escopo Resumido
-- E-commerce tech com catálogo, carrinho, checkout, autenticação com perfis **Usuário** e **Admin**.
-
-## 2. Personas (resumo)
-- **Cliente**: navega, compra e acompanha pedidos.
-- **Admin**: gerencia catálogo, estoque, preços e pedidos.
-
-## 3. Requisitos Funcionais (RF)
-- **RF-01**: Autenticar usuário com e-mail e senha.
-- **RF-02**: Cadastrar novo usuário.
-- **RF-03**: Listar catálogo de produtos com filtros.
-- **RF-04**: Exibir detalhes do produto.
-- **RF-05**: Adicionar/remover itens do carrinho.
-- **RF-06**: Finalizar compra (checkout).
-- **RF-07**: Consultar pedidos do usuário.
-- **RF-08**: (Admin) CRUD de produtos.
-- **RF-09**: (Admin) Gerenciar pedidos.
-
-> Ver histórias de usuário: [[HistoriasUsuario]]
-
-## 4. Requisitos Não Funcionais (RNF)
-- **RNF-01**: Autenticação via JWT.
-- **RNF-02**: Tempo de resposta de página < 2s em 95% das requisições.
-- **RNF-03**: Disponibilidade ≥ 99%.
-- **RNF-04**: LGPD: armazenar senhas com hash e sal; políticas de privacidade.
-- **RNF-05**: Auditoria básica de ações administrativas.
-
-## 5. Restrições
-- Back-end: Spring Boot.
-- Front-end: React.
-- DB: MySQL.
-
-## 6. Rastreabilidade (exemplos)
-- **RF-01** ↔ [[HU01]] (Login) ↔ [[TelaLogin]]
-- **RF-03** ↔ [[HU03]] (Catálogo) ↔ [[TelaCatalogoProdutos]]
-- **RF-04** ↔ [[HU04]] (Detalhes) ↔ [[TelaDetalhesProduto]]
-
-## 7. Critérios de Pronto (DoD)
-- Código versionado e testado.
-- Critérios de aceite das HUs atendidos.
-- Documentação atualizada em `docs/`.
-docs/HistoriasUsuario.md
-markdown
-Copiar código
-# 🧑‍💻 Histórias de Usuário (Índice)
-
-> Clique nas HUs para abrir (Obsidian/GitHub).
-
-## Sprint 1
-- [[HU01]] – Login de Usuário
-- [[HU02]] – Cadastro de Usuário
-- [[HU03]] – Catálogo de Produtos
-- [[HU04]] – Detalhe de Produto
-
-## Sprint 2
-- [[HU05]] – Carrinho de Compras
-- [[HU06]] – Checkout/Pagamento
-- [[HU07]] – Meus Pedidos
-- [[HU08]] – Admin: Gerenciar Produtos
-
-> Demais histórias: [[HU13]] (se existir), etc.
-
-## Telas Figma (atalhos)
-- [[TelaLogin]]
-- [[TelaCatalogoProdutos]]
-- [[TelaCadastroUsuario]]
-- [[TelaDetalhesProduto]]
-
-## Requisitos
-- [[Requisitos]]
+* **Requisitos Funcionais (RFs):** 13+ requisitos detalhados, incluindo operações CRUD em 1 tabela (ex: `Categorias`) e em 3+ tabelas (ex: `Pedidos` + `Itens_Pedido` + `Produtos`).
+* **Requisitos Não-Funcionais (RNFs):** 4+ RNFs definidos, cobrindo áreas críticas como **Desempenho**, **Integridade de Dados**, **Segurança** e **Disponibilidade**.
+* **Regras de Negócio (RBRs):** Definição de regras que regem o sistema (ex: `RBR-001` - Obrigatoriedade do Login).
+* **Padrões de Verificação:** Uma seção dedicada (Seção 4) que define as regras para a própria documentação (baseado em Magela), incluindo a obrigatoriedade de `Fonte` e `Prioridade` para cada requisito.
+* **Rastreabilidade:** Uma diretriz explícita que conecta os requisitos deste documento (ex: `RF-007`) aos protótipos de tela do projeto.
