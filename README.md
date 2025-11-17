@@ -48,18 +48,19 @@ Atualmente, estão sendo implementadas as camadas de **frontend em React** e **b
 ---
 
 ## Equipe de Desenvolvimento
-Projeto desenvolvido para fins acadêmicos, com foco na aplicação prática de tecnologias web modernas.\\  
-**Pelos Alunos:**\\  
-Marcos Vinícius Pereira\\  
-Arthur Soares Marques\\  
+Projeto desenvolvido para fins acadêmicos, com foco na aplicação prática de tecnologias web modernas.  
+**Pelos Alunos:**  
+Marcos Vinícius Pereira  
+Arthur Soares Marques  
 Diego Alves Oliveira
 
 ---
 
-## 🔧 Regras e Padrões de Uso do Git
+##  Regras e Padrões de Uso do Git
 
 ### 1. **Regras de Commit:**
    - Todos os commits devem seguir o padrão **Conventional Commits**.
+   - Nome do integrante do grupo entre [], por exemplo, [João] ....
    - Use um formato claro e descritivo para a mensagem de commit:
      - `feat:` para novos recursos;
      - `fix:` para correções de bugs;
@@ -77,6 +78,8 @@ Diego Alves Oliveira
    - Use branches para todas as novas funcionalidades ou correções de bugs.
    - Nomeie suas branches de forma clara e objetiva:
      - `feature/nome-da-feature` para novas funcionalidades;
+     - `bugfix/nome-do-bug` para correções de bugs;
+     - `hotfix/nome-do-hotfix` para correções urgentes em produção.
    - Exemplo de criação de branch:
      ```bash
      git checkout -b feature/adicionar-carrinho
@@ -91,3 +94,57 @@ Diego Alves Oliveira
 
 ---
 
+## Como Rodar o Projeto
+
+### 1. **Pré-requisitos:**
+   - Certifique-se de ter o **Node.js** e o **PostgreSQL** instalados no seu sistema.
+     - Para instalar o **Node.js**, acesse: [Node.js Official Site](https://nodejs.org/).
+     - Para instalar o **PostgreSQL**, acesse: [PostgreSQL Official Site](https://www.postgresql.org/download/).
+
+### 2. **Clonando o Repositório:**
+   - Clone este repositório para o seu ambiente local:
+     ```bash
+     git clone https://github.com/seu-usuario/vought-tech.git
+     ```
+
+### 3. **Instalação das Dependências:**
+   - Acesse a pasta do projeto:
+     ```bash
+     cd vought-tech
+     ```
+   - Instale as dependências do projeto:
+     - Para o **frontend** (React):
+       ```bash
+       cd frontend
+       npm install
+       ```
+     - Para o **backend** (Node.js):
+       ```bash
+       cd backend
+       npm install
+       ```
+
+### 4. **Configuração do Banco de Dados:**
+   - Crie o banco de dados no PostgreSQL:
+     ```bash
+     createdb vought_tech
+     ```
+   - Se necessário, crie a estrutura do banco de dados com os scripts SQL apropriados.
+
+### 5. **Rodando o Backend:**
+   - No terminal, dentro da pasta do **backend**, inicie o servidor backend:
+     ```bash
+     npm run start:backend
+     ```
+
+### 6. **Rodando o Frontend:**
+   - No terminal, dentro da pasta do **frontend**, inicie o servidor frontend:
+     ```bash
+     npm run start:frontend
+     ```
+
+### 7. **Acessando o Projeto:**
+   - O **frontend** estará acessível no navegador em: `http://localhost:3000/`
+   - O **backend** estará disponível em: `http://localhost:5000/`
+
+---
