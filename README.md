@@ -104,7 +104,7 @@ Diego Alves Oliveira
 ### 2. **Clonando o Repositório:**
    - Clone este repositório para o seu ambiente local:
      ```bash
-     git clone https://github.com/seu-usuario/vought-tech.git
+     git clone https://github.com/mvk999/EngSoftware.git
      ```
 
 ### 3. **Instalação das Dependências:**
