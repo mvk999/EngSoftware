@@ -1,0 +1,28 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+.Container{
+    width: 100%;
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    flex-direction: row;
+    background-color: #15141B;
+}
+.css-wyxc81{
+    padding: 0 !important;
+}
+.ContentCategorias{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 20px 40px;
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+.TopContentCategorias{
+    display: flex;
+    flex-direction:row-reverse;
+    width: 100%;
+    align-items: center;
+    gap:15px;
+}

@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+
+.ContainerNavBar {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    height: 100vh;
+    background-color: #191922;
+    box-shadow: 5px 0 8px rgba(0, 0, 0, 0.3);
+}
+.BarraSuperior{
+    width:100%;
+    align-items: flex-start;
+    margin: 10px;
+}
+.Logo{
+    display: flex;
+    gap: 10px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+.BarraLateralLinks{
+    display: flex;
+    flex-direction: column;
+    margin-top: 40px;
+    gap: 10px;
+}
+.BotaoNavBar{
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    background-color: transparent;
+    border: none;
+    color:#C4CDD5;
+    font-size: 16px;
+    padding: 10px 20px;
+    cursor: pointer;
+    line-height: 20px;
+    font-family: 'Poppins';
+}
+.BotaoNavBar:hover{
+    background-color: #201E2C;
+    border-bottom-right-radius:18px;
+    border-top-right-radius: 18px;
+    color: white;
+}

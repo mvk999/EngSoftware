@@ -1,10 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
-import Login from './routes/Tela_Login/login'
+import Categorias from './routes/Tela_Admin/Categorias';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Login />
+    <Categorias />
   </React.StrictMode>
 )

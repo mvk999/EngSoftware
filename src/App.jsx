@@ -1,11 +1,11 @@
 import { BrowserRouter,Route,Routes } from 'react-router-dom';
-import Login from './routes/Tela_Login/login'
+import Categorias from './routes/Tela_Admin/Categorias';
 function App() {
   
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/admin/categorias" element={<Categorias />} />
       </Routes>
     </BrowserRouter>
   )
