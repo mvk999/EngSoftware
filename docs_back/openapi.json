@@ -1,0 +1,804 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Vought Tech API",
+    "version": "1.0.0",
+    "description": "API do sistema Vought Tech. Cobre autenticação, clientes, categorias, produtos, carrinho e pedidos conforme Documento de Requisitos (Nov/2025)."
+  },
+  "servers": [
+    { "url": "http://localhost:3000", "description": "Servidor local" }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Operações de autenticação e recuperação de senha" },
+    { "name": "Cliente", "description": "Cadastro de clientes (RF010) — apenas criação via API pública" },
+    { "name": "Categoria", "description": "Gerenciamento de categorias (Admin) — RF002–RF005" },
+    { "name": "Produto", "description": "Gerenciamento e busca de produtos (Admin/Loja) — RF011, RF014–RF016" },
+    { "name": "Carrinho", "description": "Gerenciamento do carrinho do cliente (RF012)" },
+    { "name": "Pedido", "description": "Processamento e histórico de pedidos (RF006–RF009, RF007)" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Bearer token JWT usado para autenticação (usuários e admins)."
+      }
+    },
+    "schemas": {
+      "UsuarioBase": {
+        "type": "object",
+        "properties": {
+          "nome": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "tipo": {
+            "type": "string",
+            "enum": ["CLIENTE", "ADMIN"],
+            "description": "Perfil do usuário"
+          }
+        }
+      },
+      "ClienteCreate": {
+        "allOf": [
+          { "$ref": "#/components/schemas/UsuarioBase" },
+          {
+            "type": "object",
+            "properties": {
+              "senha": { "type": "string", "writeOnly": true },
+              "cpf": { "type": "string" }
+            },
+            "required": ["nome", "email", "senha", "cpf"]
+          }
+        ],
+        "example": {
+          "nome": "João Silva",
+          "email": "joao.silva@example.com",
+          "cpf": "12345678901",
+          "senha": "senha123"
+        }
+      },
+      "Cliente": {
+        "allOf": [
+          { "$ref": "#/components/schemas/UsuarioBase" },
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "integer" },
+              "cpf": { "type": "string" }
+            },
+            "required": ["id", "nome", "email"]
+          }
+        ],
+        "example": {
+          "id": 123,
+          "nome": "João Silva",
+          "email": "joao.silva@example.com",
+          "cpf": "12345678901",
+          "tipo": "CLIENTE"
+        }
+      },
+      "Endereco": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "logradouro": { "type": "string" },
+          "numero": { "type": "string" },
+          "complemento": { "type": "string" },
+          "bairro": { "type": "string" },
+          "cidade": { "type": "string" },
+          "estado": { "type": "string", "maxLength": 2 },
+          "cep": { "type": "string" }
+        }
+      },
+      "Categoria": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "nome": { "type": "string" }
+        },
+        "required": ["nome"],
+        "example": { "id": 5, "nome": "Periféricos" }
+      },
+      "Produto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "categoriaId": { "type": "integer" },
+          "nome": { "type": "string" },
+          "descricao": { "type": "string" },
+          "preco": { "type": "number", "format": "double" },
+          "estoque": { "type": "integer" }
+        },
+        "required": ["categoriaId", "nome", "preco", "estoque"],
+        "example": {
+          "id": 10,
+          "categoriaId": 5,
+          "nome": "Teclado Mecânico XYZ",
+          "descricao": "Teclado mecânico RGB",
+          "preco": 249.9,
+          "estoque": 12
+        }
+      },
+      "CarrinhoItem": {
+        "type": "object",
+        "properties": {
+          "produtoId": { "type": "integer" },
+          "quantidade": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["produtoId", "quantidade"],
+        "example": { "produtoId": 10, "quantidade": 2 }
+      },
+      "Carrinho": {
+        "type": "object",
+        "properties": {
+          "clienteId": { "type": "integer" },
+          "itens": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CarrinhoItem" }
+          }
+        },
+        "example": {
+          "clienteId": 123,
+          "itens": [{ "produtoId": 10, "quantidade": 2 }]
+        }
+      },
+      "PedidoItem": {
+        "type": "object",
+        "properties": {
+          "produtoId": { "type": "integer" },
+          "quantidade": { "type": "integer" },
+          "precoUnitario": { "type": "number", "format": "double" }
+        },
+        "required": ["produtoId", "quantidade", "precoUnitario"]
+      },
+      "Pedido": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "clienteId": { "type": "integer" },
+          "enderecoEntregaId": { "type": "integer" },
+          "itens": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PedidoItem" }
+          },
+          "valorTotal": { "type": "number", "format": "double" },
+          "status": { "type": "string" },
+          "dataPedido": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "id": 555,
+          "clienteId": 123,
+          "valorTotal": 499.8,
+          "status": "Pendente"
+        }
+      },
+      "TokenReset": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" },
+          "dataExpiracao": { "type": "string", "format": "date-time" }
+        },
+        "example": {
+          "token": "abc123",
+          "dataExpiracao": "2025-11-21T12:00:00Z"
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "message": { "type": "string" },
+          "details": { "type": "string" }
+        },
+        "example": {
+          "code": 400,
+          "message": "Requisição inválida",
+          "details": "Campo 'email' é obrigatório."
+        }
+      }
+    },
+    "parameters": {
+      "id": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" },
+        "description": "ID do recurso"
+      },
+      "clienteId": {
+        "name": "clienteId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" },
+        "description": "ID do cliente"
+      },
+      "produtoId": {
+        "name": "produtoId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer" },
+        "description": "ID do produto"
+      },
+      "token": {
+        "name": "token",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "Token de recuperação"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Requisição inválida",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Não autorizado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Erro interno",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "bearerAuth": [] }],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Autenticar-se no Sistema (RF001)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "senha": { "type": "string" }
+                },
+                "required": ["email", "senha"]
+              },
+              "example": {
+                "email": "joao.silva@example.com",
+                "senha": "senha123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "token": { "type": "string" } }
+                },
+                "example": { "token": "eyJhbGciOi..." }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+
+    "/auth/reset": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Recuperar Senha — solicitar token (RF013)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["email"]
+              },
+              "example": { "email": "joao.silva@example.com" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Instruções enviadas" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+
+    "/auth/reset/{token}": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Recuperar Senha — redefinir com token (RF013)",
+        "parameters": [{ "$ref": "#/components/parameters/token" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "senha": { "type": "string" } },
+                "required": ["senha"]
+              },
+              "example": { "senha": "novasenha123" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Senha redefinida" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+
+    "/cliente": {
+      "post": {
+        "tags": ["Cliente"],
+        "summary": "Cadastrar-se (RF010)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ClienteCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente criado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Cliente" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+
+    
+
+    "/categoria": {
+      "get": {
+        "tags": ["Categoria"],
+        "summary": "Consultar Categorias (RF003)",
+        "responses": {
+          "200": {
+            "description": "Lista de categorias",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Categoria" }
+                },
+                "example": [{ "id": 5, "nome": "Periféricos" }]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Categoria"],
+        "summary": "Cadastrar Categoria (RF002)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Categoria" },
+              "example": { "nome": "Periféricos" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Categoria" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/categoria/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "tags": ["Categoria"],
+        "summary": "Consultar Categoria por ID (RF003)",
+        "responses": {
+          "200": {
+            "description": "Categoria encontrada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Categoria" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "put": {
+        "tags": ["Categoria"],
+        "summary": "Alterar Categoria (RF004)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Categoria" },
+              "example": { "nome": "Periféricos Atualizada" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Categoria atualizada" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Categoria"],
+        "summary": "Excluir Categoria (RF005)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Categoria removida" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/produto": {
+      "get": {
+        "tags": ["Produto"],
+        "summary": "Buscar Produtos (RF011)",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Termo de busca (nome)"
+          },
+          {
+            "name": "categoriaId",
+            "in": "query",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de produtos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Produto" }
+                },
+                "example": [{ "id": 10, "nome": "Teclado Mecânico XYZ", "preco": 249.9 }]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Produto"],
+        "summary": "Criar Produto (RF015)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Produto" },
+              "example": {
+                "categoriaId": 5,
+                "nome": "Mouse Gamer ABC",
+                "preco": 129.9,
+                "estoque": 20
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Produto criado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Produto" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/produto/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "put": {
+        "tags": ["Produto"],
+        "summary": "Editar Produto (RF014)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Produto" },
+              "example": { "nome": "Teclado Atualizado", "preco": 199.9 }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Produto atualizado" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      },
+      "delete": {
+        "tags": ["Produto"],
+        "summary": "Deletar Produto (RF016)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Produto removido" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+
+    "/carrinho/{clienteId}": {
+      "parameters": [{ "$ref": "#/components/parameters/clienteId" }],
+      "get": {
+        "tags": ["Carrinho"],
+        "summary": "Obter Carrinho (RF012)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Carrinho do cliente",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Carrinho" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Carrinho"],
+        "summary": "Adicionar Item ao Carrinho (RF012)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CarrinhoItem" },
+              "example": { "produtoId": 10, "quantidade": 2 }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Item adicionado/Atualizado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Carrinho" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "delete": {
+        "tags": ["Carrinho"],
+        "summary": "Limpar Carrinho (RF012)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Carrinho limpo" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/carrinho/{clienteId}/{produtoId}": {
+      "parameters": [
+        { "$ref": "#/components/parameters/clienteId" },
+        { "$ref": "#/components/parameters/produtoId" }
+      ],
+      "put": {
+        "tags": ["Carrinho"],
+        "summary": "Atualizar Item do Carrinho (RF012)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CarrinhoItem" },
+              "example": { "produtoId": 10, "quantidade": 3 }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quantidade atualizada",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Carrinho" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "delete": {
+        "tags": ["Carrinho"],
+        "summary": "Remover Item do Carrinho (RF012)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Item removido" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+
+    "/pedido": {
+      "get": {
+        "tags": ["Pedido"],
+        "summary": "Consultar Histórico de Pedidos (RF007)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Lista de pedidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Pedido" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/pedido/{id}": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "get": {
+        "tags": ["Pedido"],
+        "summary": "Consultar Pedido por ID (RF007)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Pedido encontrado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pedido" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      },
+      "delete": {
+        "tags": ["Pedido"],
+        "summary": "Cancelar Pedido (RF009)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "Pedido cancelado" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/pedido/{clienteId}": {
+      "parameters": [{ "$ref": "#/components/parameters/clienteId" }],
+      "post": {
+        "tags": ["Pedido"],
+        "summary": "Finalizar Pedido (RF006)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": { "type": "string" },
+            "required": false,
+            "description": "Chave para tornar criação de pedido idempotente (RNF005)"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Pedido criado",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pedido" },
+                "example": {
+                  "id": 556,
+                  "clienteId": 123,
+                  "valorTotal": 199.8
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+
+    "/pedido/{id}/status": {
+      "parameters": [{ "$ref": "#/components/parameters/id" }],
+      "put": {
+        "tags": ["Pedido"],
+        "summary": "Atualiza status do pedido (RF008) — Admin",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "status": { "type": "string" } },
+                "required": ["status"]
+              },
+              "example": { "status": "Processando" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status atualizado" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    }
+  }
+}
