@@ -19,6 +19,14 @@ const rows = [
   { id: '#2', name: 'Periféricos' },
   { id: '#3', name: 'Fones' },
   { id: '#4', name: 'Notebooks' },
+  { id: '#5', name: 'Eletronicos' },
+  { id: '#6', name: 'Periféricos' },
+  { id: '#7', name: 'Fones' },
+  { id: '#8', name: 'Notebooks' },
+  { id: '#9', name: 'Eletronicos' },
+  { id: '#10', name: 'Periféricos' },
+  { id: '#11', name: 'Fones' },
+  { id: '#12', name: 'Notebooks' },
 ];
 
 const columns = [
@@ -27,7 +35,7 @@ const columns = [
   { id: 'actions', label: 'AÇÕES', minWidth: 150, align: 'right' },
 ];
 
-function CategoryTable() {
+function CategoryTable({ onEditarCategoria }) {
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5;
 
@@ -88,7 +96,7 @@ function CategoryTable() {
                       textTransform: 'uppercase',
                       padding: '16px 20px',
                       border: 'none',
-                      fontFamily: 'Poppins, sans-serif',
+                      fontFamily: 'Poppins',
                     }}
                   >
                     {column.label}
@@ -120,7 +128,7 @@ function CategoryTable() {
                           fontSize: '14px',
                           lineHeight: '150%',
                           border: 'none',
-                          fontFamily: 'Poppins, sans-serif',
+                          fontFamily: 'Poppins',
                           fontWeight: '400',
                         }}
                       >
@@ -144,6 +152,7 @@ function CategoryTable() {
                                 transition: 'opacity 0.2s',
                               }}
                               title="Editar"
+                              onClick={() => onEditarCategoria && onEditarCategoria(row)}
                               onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                               onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                             >
@@ -200,7 +209,7 @@ function CategoryTable() {
               '& .MuiPaginationItem-root': {
                 color: '#C4CDD5',
                 borderColor: '#3a3f4f',
-                fontFamily: 'Poppins, sans-serif',
+                fontFamily: 'Poppins',
                 fontWeight: '500',
                 fontSize: '16px',
                 width: '36px',
