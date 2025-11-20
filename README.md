@@ -3,8 +3,6 @@
 **Vought Tech** é um e-commerce voltado para a venda de produtos tecnológicos.  
 O objetivo do sistema é permitir que usuários naveguem e realizem compras de itens como periféricos, eletrônicos e acessórios, de forma prática e intuitiva.  
 
-Este projeto está sendo desenvolvido como parte da **Tarefa #2**, contemplando a estrutura inicial do sistema, definição de tecnologias e configuração dos ambientes de desenvolvimento.
-
 ---
 
 ## Descrição do Produto
@@ -22,37 +20,23 @@ O sistema contará com funcionalidades como:
 ## Tecnologias Utilizadas
 
 ### Frontend
-- **Linguagem:** JavaScript  
+- **Linguagem:** JavaScript + HTML + CSS + React + Vite
 - **Framework:** [React](https://reactjs.org/)  
-- **Versão:** 18+  
+- **Versão NodeJS:** 22.11.1
+- **Versão NPM:** 10.9.3
 - **Gerenciador de pacotes:** npm  
 
 ### Backend
 - **Linguagem:** JavaScript (Node.js)  
-- **Versão:** 20+  
+- **Versão:** 22.21.0  
 - **Framework do servidor:** [Express.js](https://expressjs.com/)  
 - **Banco de Dados:** [PostgreSQL](https://www.postgresql.org/)  
+- **Versão:** 17.5
 
 ### Ambiente de Desenvolvimento
-- **Servidor local:** Node.js + Express  
-- **Banco de dados local:** PostgreSQL  
-- **IDE recomendada:** Visual Studio Code  
+- **Servidor local:** Node.js 
+- **Banco de dados local:** PostgreSQL   
 - **Controle de versão:** Git + GitHub  
-
----
-
-## Status do Projeto
-Em desenvolvimento 
-Atualmente, estão sendo implementadas as camadas de **frontend em React** e **backend em Node.js** com integração ao **PostgreSQL local**.
-
----
-
-## Equipe de Desenvolvimento
-Projeto desenvolvido para fins acadêmicos, com foco na aplicação prática de tecnologias web modernas.  
-**Pelos Alunos:**  
-Marcos Vinícius Pereira  
-Arthur Soares Marques  
-Diego Alves Oliveira
 
 ---
 
@@ -71,7 +55,7 @@ Diego Alves Oliveira
      - `chore:` para ajustes de infraestrutura ou dependências.
    - Exemplo de mensagem de commit:
      ```bash
-     feat: adiciona autenticação de usuário
+     feat: [Marcos] adiciona autenticação de usuário
      ```
 
 ### 2. **Uso de Branches:**
@@ -96,55 +80,155 @@ Diego Alves Oliveira
 
 ## Como Rodar o Projeto
 
-### 1. **Pré-requisitos:**
-   - Certifique-se de ter o **Node.js** e o **PostgreSQL** instalados no seu sistema.
-     - Para instalar o **Node.js**, acesse: [Node.js Official Site](https://nodejs.org/).
-     - Para instalar o **PostgreSQL**, acesse: [PostgreSQL Official Site](https://www.postgresql.org/download/).
+### 1. Clonar o Repositório
 
-### 2. **Clonando o Repositório:**
-   - Clone este repositório para o seu ambiente local:
-     ```bash
-     git clone https://github.com/mvk999/EngSoftware.git
-     ```
+Clone este repositório para a sua máquina local utilizando o comando:
 
-### 3. **Instalação das Dependências:**
-   - Acesse a pasta do projeto:
-     ```bash
-     cd vought-tech
-     ```
-   - Instale as dependências do projeto:
-     - Para o **frontend** (React):
-       ```bash
-       cd frontend
-       npm install
-       ```
-     - Para o **backend** (Node.js):
-       ```bash
-       cd backend
-       npm install
-       ```
+Entendido. Aqui está o código bruto do Markdown. Copie o conteúdo dentro do bloco de código abaixo e salve como um arquivo .md (ex: README.md).
 
-### 4. **Configuração do Banco de Dados:**
-   - Crie o banco de dados no PostgreSQL:
-     ```bash
-     createdb vought_tech
-     ```
-   - Se necessário, crie a estrutura do banco de dados com os scripts SQL apropriados.
+Markdown
 
-### 5. **Rodando o Backend:**
-   - No terminal, dentro da pasta do **backend**, inicie o servidor backend:
-     ```bash
-     npm run start:backend
-     ```
+# Projeto: Especificação de Requisitos (ERS) - Vought Tech E-commerce
 
-### 6. **Rodando o Frontend:**
-   - No terminal, dentro da pasta do **frontend**, inicie o servidor frontend:
-     ```bash
-     npm run start:frontend
-     ```
+Este repositório funciona como o centralizador de todo o projeto **Vought Tech**, incluindo o documento formal de **Especificação de Requisitos de Software (ERS)** para o sistema de e-commerce de produtos de tecnologia fictício. O arquivo principal do projeto, nomeado "RequisitosRFeRNF", está incluído aqui, juntamente com outros materiais e recursos relacionados ao desenvolvimento do sistema.
 
-### 7. **Acessando o Projeto:**
-   - O **frontend** estará acessível no navegador em: `http://localhost:3000/`
-   - O **backend** estará disponível em: `http://localhost:5000/`
+## 1. Objetivo do Documento
+
+O objetivo deste documento é definir e catalogar formalmente todos os requisitos funcionais, não funcionais e regras de negócio necessárias para guiar o desenvolvimento do software **Vought Tech**. Ele serve como a "fonte da verdade" para a equipe de desenvolvimento e stakeholders, garantindo que o produto final atenda a todos os critérios estabelecidos.
+
+---
+
+## 2. Escopo do Sistema (Vought Tech)
+
+O sistema de e-commerce **Vought Tech** inclui as seguintes funcionalidades principais:
+
+* **Gerenciamento de Contas:**
+  Cadastro, login (obrigatório) e recuperação de senha para Clientes e Administradores.
+* **Catálogo de Produtos:**
+  Gerenciamento CRUD de Categorias e Produtos.
+* **Jornada de Compra (Estética):**
+  Funcionalidades de busca, filtro, carrinho de compras e um checkout simulado (sem processamento de pagamento real).
+* **Painel Administrativo:**
+  Interface para administradores processarem pedidos (dando baixa no estoque) e gerenciarem o catálogo.
+
+## 3. Estrutura do Documento ERS
+
+O **ERS** foi estruturado para atender às diretrizes e boas práticas de Engenharia de Software, garantindo a clareza e rastreabilidade dos requisitos. A seguir, a organização detalhada do documento:
+
+#### 1. **Requisitos Funcionais (RFs)**
+
+#### 2. **Requisitos Não-Funcionais (RNFs)**
+
+#### 3. **Regras de Negócio (RBRs)**
+
+#### 4. **Padrões de Verificação**
+
+#### 5. **Rastreabilidade**
+
+---
+
+# Localização no Projeto
+
+No seu projeto, a documentação do **ERS** está organizada da seguinte forma:
+
+- **Pasta `docs/`**: Contém os documentos principais do projeto.
+  - **Documento `Requisitos.md`**: Onde está a versão completa do **ERS**.
+  - **Pasta `Documento de Requisitos/`**: Onde estão o **Documento Requisitos Final** adotados, incluindo as regras e práticas de codificação, uso de Git, e outros padrões do projeto.
+  - **Pasta `Padrões Adotados/`**: Onde estão os **Regras de Verificação e Análise de Requisito** adotados, incluindo as regras e práticas de codificação, uso de Git, e outros padrões do projeto.
+
+
+---
+
+# Configuração e Execução do Projeto
+
+Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
+
+## 1. Clonar o Repositório
+
+Faça o clone do projeto e entre na pasta raiz:
+
+```bash
+git clone https://github.com/mvk999/EngSoftware.git
+cd EngSoftware
+```
+
+---
+
+# Configuração e Execução do Projeto
+
+Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
+
+## 1. Clonar o Repositório
+
+Faça o clone do projeto e entre na pasta raiz:
+
+```bash
+git clone https://github.com/mvk999/EngSoftware.git
+cd EngSoftware
+```
+
+---
+
+## 2. Instalação das Dependências
+
+### Backend (Node.js)
+Navegue até a pasta do backend e instale as dependências:
+
+```bash
+cd backend
+npm install
+```
+
+### Frontend (React)
+Navegue até a pasta do frontend e instale as dependências:
+
+```bash
+cd ../frontend
+npm install
+```
+
+---
+
+## 3. Configurar o Banco de Dados
+
+1. Crie um banco de dados **PostgreSQL**.
+2. No diretório `backend`, crie um arquivo `.env` ou edite o arquivo de configuração do banco.
+3. Configure as credenciais de conexão (Host, User, Password, Database).
+
+---
+
+## 4. Rodar o Projeto
+
+Recomenda-se abrir dois terminais separados.
+
+### Terminal 1: Backend
+
+Inicie o servidor Node.js:
+
+```bash
+cd backend
+npm start
+```
+
+### Terminal 2: Frontend
+
+Inicie o servidor React:
+
+```bash
+cd frontend
+npm start
+```
+---
+
+Agora, o sistema estará rodando em http://localhost:3000 para o frontend e http://localhost:8080 para o backend.
+
+---
+
+## Equipe de Desenvolvimento
+Projeto desenvolvido para fins acadêmicos, com foco na aplicação prática de tecnologias web modernas.  
+**Pelos Alunos:**  
+Marcos Vinícius Pereira  
+Arthur Soares Marques  
+Diego Alves Oliveira
 
 ---
