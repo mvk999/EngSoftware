@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import './CategoriaModal.css';
+import './ProdutoModal.css';
 import EditIcon from '@mui/icons-material/Edit';
 
-function EditarCategoriaModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) {
+function EditarProdutoModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) {
   const [nome, setNome] = useState(categoriaNome);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function EditarCategoriaModal({ isOpen, onClose, onConfirm, categoriaNome = '' }
             }}/>
           </div>
           <div className="modal-text-wrapper">
-            <h1 className="modal-title">Editar Categoria</h1>
+            <h1 className="modal-title">Editar Produtos</h1>
           </div>
           <button className="modal-close-btn" onClick={handleCancel} type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -86,4 +86,4 @@ function EditarCategoriaModal({ isOpen, onClose, onConfirm, categoriaNome = '' }
   );
 }
 
-export default EditarCategoriaModal;
+export default EditarProdutoModal;

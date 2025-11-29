@@ -14,25 +14,24 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Modal Container */
 .modal-content {
   position: relative;
   width: 387px;
-  height: 410px;
+  max-height: 90vh;
   background: #191922;
-  box-shadow: 0px 20px 24px -4px rgba(10, 13, 18, 0.1), 0px 8px 8px -4px rgba(10, 13, 18, 0.04);
+  box-shadow: 0px 20px 24px -4px rgba(10, 13, 18, 0.1),
+              0px 8px 8px -4px rgba(10, 13, 18, 0.04);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
+  padding: 24px;
   animation: slideUp 0.3s ease-out;
+  box-sizing: border-box;
 }
 
 @keyframes slideUp {
@@ -50,16 +49,9 @@
 .modal-header {
   display: flex;
   flex-direction: column;
-  padding: 24px 24px 0px;
   gap: 16px;
-  height: 176px;
   background: #191922;
   position: relative;
-  flex: none;
-  order: 0;
-  align-self: stretch;
-  flex-grow: 0;
-  z-index: 0;
 }
 
 /* Featured Icon */
@@ -74,22 +66,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: none;
-  order: 0;
-  flex-grow: 0;
   animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 @keyframes popIn {
-  0% {
-    transform: scale(0);
-  }
-  70% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 
 /* Text Wrapper */
@@ -97,29 +80,19 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0px;
   gap: 4px;
-  width: 339px;
-  height: 68px;
-  flex: none;
-  order: 1;
-  align-self: stretch;
-  flex-grow: 0;
+  width: 100%;
 }
 
 /* Title */
 .modal-title {
-  width: 339px;
-  height: 44px;  
+  width: 100%;
   font-style: normal;
   font-weight: 400;
-  line-height: 44px;
+  font-size: 24px;
+  line-height: 32px;
   color: #C4CDD5;
   margin: 0;
-  flex: none;
-  order: 0;
-  align-self: stretch;
-  flex-grow: 0;
 }
 
 /* Close Button */
@@ -127,8 +100,8 @@
   position: absolute;
   width: 44px;
   height: 44px;
-  right: 16px;
-  top: 16px;
+  right: 0;
+  top: 0;
   border-radius: 8px;
   border: none;
   background: transparent;
@@ -149,18 +122,16 @@
   transform: rotate(90deg) scale(0.95);
 }
 
-/* Input Section */
+/* Input Section - AGORA EM FLUXO NORMAL */
 .modal-input-section {
-  position: absolute;
-  width: 339px;
-  height: 98px;
-  left: 24px;
-  top: 156px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0px;
-  gap: 6px;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto; /* se tiver muito campo, cria scroll interno */
+  padding-right: 4px; /* margem pro scroll */
 }
 
 /* Input Field */
@@ -168,31 +139,20 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 0px;
   gap: 6px;
-  width: 339px;
-  height: 70px;
-  flex: none;
-  order: 0;
-  align-self: stretch;
-  flex-grow: 0;
+  width: 100%;
 }
 
 /* Input Label */
 .input-label {
-  width: 40px;
-  height: 20px;
   font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 20px;
   color: #C4CDD5;
-  flex: none;
-  order: 0;
-  flex-grow: 0;
 }
 
-/* Input Box */
+/* Input Box (input e textarea usam a mesma classe) */
 .input-box {
   box-sizing: border-box;
   display: flex;
@@ -200,8 +160,8 @@
   align-items: center;
   padding: 10px 14px;
   gap: 8px;
-  width: 339px;
-  height: 44px;
+  width: 100%;
+  min-height: 44px;
   background: #FFFFFF;
   border: 1px solid #D5D7DA;
   box-shadow: 0px 1px 2px rgba(10, 13, 18, 0.05);
@@ -210,10 +170,6 @@
   font-size: 16px;
   line-height: 24px;
   color: #191922;
-  flex: none;
-  order: 1;
-  align-self: stretch;
-  flex-grow: 0;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -224,20 +180,23 @@
 .input-box:focus {
   outline: none;
   border-color: #FFC831;
-  box-shadow: 0px 1px 2px rgba(10, 13, 18, 0.05), 0px 0px 0px 3px rgba(255, 200, 49, 0.1);
+  box-shadow:
+    0px 1px 2px rgba(10, 13, 18, 0.05),
+    0px 0px 0px 3px rgba(255, 200, 49, 0.1);
 }
 
-/* Modal Actions */
+/* Permite textarea sem quebrar o layout */
+textarea.input-box {
+  align-items: flex-start;
+  resize: vertical;
+}
+
+/* Modal Actions - EMBAIXO, SEM ABSOLUTE */
 .modal-actions {
-  position: absolute;
-  width: 387px;
-  height: 156px;
-  left: 0px;
-  top: 254px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: 32px 24px 0px;
+  align-items: stretch;
   gap: 12px;
 }
 
@@ -250,7 +209,7 @@
   align-items: center;
   padding: 10px 18px;
   gap: 8px;
-  width: 339px;
+  width: 100%;
   height: 44px;
   background: #FFC831;
   border: 1px solid #FFC831;
@@ -263,10 +222,6 @@
   color: #191922;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex: none;
-  order: 0;
-  align-self: stretch;
-  flex-grow: 0;
 }
 
 .btn-confirm:hover {
@@ -291,7 +246,7 @@
   align-items: center;
   padding: 10px 18px;
   gap: 8px;
-  width: 339px;
+  width: 100%;
   height: 44px;
   background: #191922;
   border: 1px solid #C4CDD5;
@@ -304,10 +259,6 @@
   color: #C4CDD5;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  flex: none;
-  order: 1;
-  align-self: stretch;
-  flex-grow: 0;
 }
 
 .btn-cancel:hover {
@@ -328,16 +279,5 @@
   .modal-content {
     width: 90vw;
     max-width: 387px;
-  }
-  
-  .modal-header,
-  .modal-actions {
-    width: 100%;
-  }
-  
-  .input-box,
-  .btn-confirm,
-  .btn-cancel {
-    width: 100%;
   }
 }
