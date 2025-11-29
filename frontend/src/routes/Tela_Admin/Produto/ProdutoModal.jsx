@@ -136,6 +136,7 @@ function ProdutoModal({
               value={formData.id}
               onChange={handleChange('id')}
               onKeyDown={handleKeyPress}
+              disabled={modo === 'cadastrar'} // <--- trava no cadastro
             />
           </div>
 

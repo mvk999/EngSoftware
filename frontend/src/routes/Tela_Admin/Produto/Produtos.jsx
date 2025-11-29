@@ -1,45 +1,103 @@
+// routes/Tela_Admin/Produtos.jsx
 import './Produto.css';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from 'axios';
 import NavBarAdmin from '../NavBarAdmin';
-import Table from './Table';
+import ProdutoTable from './Table';
 import ProdutoModal from './ProdutoModal';
 
+const API_BASE_URL = 'http://localhost:8080'; // ajuste se sua API estiver em outra porta/host
+
 function Produtos() {
+  const [produtos, setProdutos] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modoModal, setModoModal] = useState('editar'); // 'editar' ou 'cadastrar'
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState(null);
+  const [produtoSelecionado, setProdutoSelecionado] = useState(null);
 
-  const handleAbrirModalEditar = (categoria) => {
-    setCategoriaSelecionada(categoria);   // row completo vindo da tabela
+  // =============================
+  // CARREGAR LISTA (GET /produto)
+  // =============================
+  const carregarProdutos = async () => {
+    try {
+      const resp = await axios.get(`${API_BASE_URL}/produto`);
+      // espera que resp.data seja um array de produtos
+      setProdutos(resp.data || []);
+    } catch (err) {
+      console.error('Erro ao buscar produtos:', err);
+    }
+  };
+
+  useEffect(() => {
+    carregarProdutos();
+  }, []);
+
+  // =============================
+  // ABRIR MODAL
+  // =============================
+  const handleAbrirModalEditar = (produto) => {
+    setProdutoSelecionado(produto);   // row completo vindo da tabela
     setModoModal('editar');
     setShowModal(true);
   };
 
   const handleAbrirModalCadastrar = () => {
-    setCategoriaSelecionada(null);
+    setProdutoSelecionado(null);
     setModoModal('cadastrar');
     setShowModal(true);
   };
 
-  // agora recebe o objeto inteiro vindo do modal
-  const handleConfirmarModal = (categoriaEditadaOuNova) => {
-    if (modoModal === 'editar') {
-      console.log('Categoria atualizada:', categoriaEditadaOuNova);
-      // TODO: chamada de API para atualizar categoria
-      // ex: api.put(`/categorias/${categoriaEditadaOuNova.id}`, categoriaEditadaOuNova)
-    } else {
-      console.log('Nova categoria criada:', categoriaEditadaOuNova);
-      // TODO: chamada de API para criar categoria
-      // ex: api.post('/categorias', categoriaEditadaOuNova)
-    }
+  // ====================================================
+  // SALVAR (POST /produto ou PUT /produto/{id})
+  // ====================================================
+  const handleConfirmarModal = async (produtoEditadoOuNovo) => {
+    try {
+      if (modoModal === 'editar') {
+        // PUT /produto/{id}
+        const id = produtoEditadoOuNovo.id; // ajuste se no backend for idProduto etc.
+        const resp = await axios.put(
+          `${API_BASE_URL}/produto/${id}`,
+          produtoEditadoOuNovo
+        );
 
-    setShowModal(false);
-    setCategoriaSelecionada(null);
+        const produtoAtualizado = resp.data || produtoEditadoOuNovo;
+
+        setProdutos((prev) =>
+          prev.map((p) => (p.id === id ? produtoAtualizado : p))
+        );
+      } else {
+        // POST /produto
+        const resp = await axios.post(
+          `${API_BASE_URL}/produto`,
+          produtoEditadoOuNovo
+        );
+
+        const produtoCriado = resp.data || produtoEditadoOuNovo;
+
+        setProdutos((prev) => [...prev, produtoCriado]);
+      }
+    } catch (err) {
+      console.error('Erro ao salvar produto:', err);
+    } finally {
+      setShowModal(false);
+      setProdutoSelecionado(null);
+    }
+  };
+
+  // ==========================================
+  // EXCLUIR (DELETE /produto/{id})
+  // ==========================================
+  const handleExcluirProduto = async (id) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/produto/${id}`);
+      setProdutos((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      console.error('Erro ao excluir produto:', err);
+    }
   };
 
   const handleFecharModal = () => {
     setShowModal(false);
-    setCategoriaSelecionada(null);
+    setProdutoSelecionado(null);
   };
 
   return (
@@ -48,7 +106,7 @@ function Produtos() {
         isOpen={showModal}
         onClose={handleFecharModal}
         onConfirm={handleConfirmarModal}
-        categoria={categoriaSelecionada}
+        categoria={produtoSelecionado}
         modo={modoModal}
       />
 
@@ -61,8 +119,11 @@ function Produtos() {
           <img src="/src/assets/ShopCart.svg" alt="Shop Cart" />
         </div>
 
-        {/* Table chama handleAbrirModalEditar(row) no botão de editar */}
-        <Table onEditarCategoria={handleAbrirModalEditar} />
+        <ProdutoTable
+          produtos={produtos}
+          onEditarCategoria={handleAbrirModalEditar}
+          onDeleteProduto={handleExcluirProduto}
+        />
 
         <button
           className="ButtonAdmin"

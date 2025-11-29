@@ -1,3 +1,4 @@
+// routes/Tela_Admin/Table.jsx
 import * as React from 'react';
 import {
   Table,
@@ -14,106 +15,6 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const rows = [
-  {
-    id: '#1',
-    idcategoria: '#C1',
-    name: 'Mouse Gamer RGB',
-    descricao: 'Mouse óptico 7200 DPI com iluminação RGB',
-    preco: 'R$ 129,90',
-    estoque: 37,
-  },
-  {
-    id: '#2',
-    idcategoria: '#C1',
-    name: 'Teclado Mecânico',
-    descricao: 'Teclado mecânico ABNT2 com switches blue',
-    preco: 'R$ 349,90',
-    estoque: 18,
-  },
-  {
-    id: '#3',
-    idcategoria: '#C2',
-    name: 'Headset 7.1 Surround',
-    descricao: 'Headset gamer com som surround virtual 7.1',
-    preco: 'R$ 279,90',
-    estoque: 25,
-  },
-  {
-    id: '#4',
-    idcategoria: '#C3',
-    name: 'Notebook UltraSlim 14"',
-    descricao: 'Notebook 14" i5, 8GB RAM, SSD 256GB',
-    preco: 'R$ 3.499,00',
-    estoque: 9,
-  },
-  {
-    id: '#5',
-    idcategoria: '#C1',
-    name: 'Monitor 24" Full HD',
-    descricao: 'Monitor 24" 75Hz com bordas finas',
-    preco: 'R$ 899,90',
-    estoque: 12,
-  },
-  {
-    id: '#6',
-    idcategoria: '#C2',
-    name: 'Webcam Full HD',
-    descricao: 'Webcam 1080p com microfone embutido',
-    preco: 'R$ 199,90',
-    estoque: 40,
-  },
-  {
-    id: '#7',
-    idcategoria: '#C2',
-    name: 'Mousepad Extended',
-    descricao: 'Mousepad estendido 90x30cm com base emborrachada',
-    preco: 'R$ 79,90',
-    estoque: 52,
-  },
-  {
-    id: '#8',
-    idcategoria: '#C3',
-    name: 'Notebook Gamer 15,6"',
-    descricao: 'Notebook Ryzen 7, 16GB RAM, RTX 3060',
-    preco: 'R$ 7.999,00',
-    estoque: 4,
-  },
-  {
-    id: '#9',
-    idcategoria: '#C4',
-    name: 'SSD NVMe 1TB',
-    descricao: 'SSD NVMe PCIe 3.0 1TB até 3500MB/s',
-    preco: 'R$ 529,90',
-    estoque: 30,
-  },
-  {
-    id: '#10',
-    idcategoria: '#C4',
-    name: 'HD 2TB 3.5"',
-    descricao: 'HD interno 2TB para desktop, 7200RPM',
-    preco: 'R$ 399,90',
-    estoque: 21,
-  },
-  {
-    id: '#11',
-    idcategoria: '#C5',
-    name: 'Fonte 650W 80 Plus Bronze',
-    descricao: 'Fonte ATX 650W com certificação 80 Plus Bronze',
-    preco: 'R$ 449,90',
-    estoque: 14,
-  },
-  {
-    id: '#12',
-    idcategoria: '#C5',
-    name: 'Gabinete Mid Tower RGB',
-    descricao: 'Gabinete com lateral em vidro temperado e 3 fans RGB',
-    preco: 'R$ 499,90',
-    estoque: 11,
-  },
-];
-
-
 const columns = [
   { id: 'id', label: 'ID', minWidth: 80 },
   { id: 'idcategoria', label: 'ID-CATEGORIA', minWidth: 110 },
@@ -124,7 +25,11 @@ const columns = [
   { id: 'actions', label: 'AÇÕES', minWidth: 120, align: 'right' },
 ];
 
-function ProdutoTable({ onEditarCategoria }) {
+function ProdutoTable({
+  produtos = [],
+  onEditarCategoria,
+  onDeleteProduto,
+}) {
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5;
 
@@ -134,7 +39,7 @@ function ProdutoTable({ onEditarCategoria }) {
 
   const startIndex = (page - 1) * rowsPerPage;
   const endIndex = startIndex + rowsPerPage;
-  const currentRows = rows.slice(startIndex, endIndex);
+  const currentRows = produtos.slice(startIndex, endIndex);
 
   return (
     <Box
@@ -181,7 +86,7 @@ function ProdutoTable({ onEditarCategoria }) {
 
         {/* Tabela */}
         <TableContainer sx={{ maxHeight: 'auto' }}>
-          <Table aria-label="tabela de categorias">
+          <Table aria-label="tabela de produtos">
             <TableHead>
               <TableRow sx={{ backgroundColor: '#D9D9D9' }}>
                 {columns.map((column) => (
@@ -254,6 +159,7 @@ function ProdutoTable({ onEditarCategoria }) {
                               alignItems: 'center',
                             }}
                           >
+                            {/* EDITAR */}
                             <button
                               style={{
                                 background: 'none',
@@ -279,6 +185,8 @@ function ProdutoTable({ onEditarCategoria }) {
                             >
                               <EditIcon sx={{ width: 20, height: 20 }} />
                             </button>
+
+                            {/* DELETAR */}
                             <button
                               style={{
                                 background: 'none',
@@ -292,6 +200,9 @@ function ProdutoTable({ onEditarCategoria }) {
                                 transition: 'opacity 0.2s',
                               }}
                               title="Deletar"
+                              onClick={() =>
+                                onDeleteProduto && onDeleteProduto(row.id)
+                              }
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.opacity = '0.7')
                               }
@@ -326,40 +237,10 @@ function ProdutoTable({ onEditarCategoria }) {
           }}
         >
           <Pagination
-            count={Math.ceil(rows.length / rowsPerPage)}
+            count={Math.ceil(produtos.length / rowsPerPage)}
             page={page}
             onChange={handleChangePage}
             size="large"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                color: '#C4CDD5',
-                borderColor: '#3a3f4f',
-                fontFamily: 'Poppins',
-                fontWeight: '500',
-                fontSize: '16px',
-                width: '36px',
-                height: '36px',
-                backgroundColor: '#191922',
-                border: '1px solid #E6E6E6',
-                borderRadius: '50%',
-                '&.Mui-selected': {
-                  backgroundColor: '#FFC831',
-                  color: '#191922',
-                  border: 'none',
-                  fontWeight: '500',
-                  '&:hover': {
-                    backgroundColor: '#FFD54F',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: '#2a2f3f',
-                  borderColor: '#3a3f4f',
-                },
-              },
-              '& .MuiButtonBase-root': {
-                margin: '0 6px',
-              },
-            }}
           />
         </Box>
       </Paper>
