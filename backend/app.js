@@ -1,25 +1,45 @@
+// app.js
 import express from "express";
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import cors from "cors";
+
 import router from "./routes/indexRoute.js";
 import swaggerDocs from "./utils/swagger.js";
+import db from "./repositories/bd.js";
+import errorHandler from "./utils/error.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middlewares
+// Middlewares globais
+app.use(cors());
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
-// Rotas principais
-app.use("/", router);
+async function startServer() {
+    try {
+        await db.initDB();
 
-// Swagger UI
-swaggerDocs(app);
+        // Rotas principais
+        app.use("/", router);
 
-// Servidor
-app.listen(port, () => {
-    console.log(`🚀 Servidor rodando em http://localhost:${port}`);
-});
+        // Swagger
+        swaggerDocs(app);
+
+        // Tratamento global de erros (último middleware)
+        app.use(errorHandler);
+
+        // Start
+        app.listen(port, () => {
+            console.log(`🚀 Servidor rodando em http://localhost:${port}`);
+        });
+
+    } catch (err) {
+        console.error("❌ ERRO FATAL ao iniciar a aplicação:", err);
+        process.exit(1);
+    }
+}
+
+startServer();

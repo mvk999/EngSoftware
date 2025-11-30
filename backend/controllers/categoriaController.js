@@ -1,106 +1,101 @@
+// controllers/categoriaController.js
 import categoriaServices from "../services/categoriaServices.js";
 import { AppError } from "../utils/error.js";
 
 async function getAllCategorias(req, res) {
-    try {
-        const resultado = await categoriaServices.getAllCategorias();
-        res.status(200).send(resultado);
+  try {
+    const categorias = await categoriaServices.getAllCategorias();
+    return res.status(200).json(categorias);
+  } catch (err) {
+    console.error("categoriaController.getAllCategorias:", err);
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao buscar categorias.");
-    }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao buscar categorias." });
+  }
 }
 
 async function getCategoria(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
+    const categoria = await categoriaServices.getCategoria(id);
+    return res.status(200).json(categoria);
+  } catch (err) {
+    console.error("categoriaController.getCategoria:", err);
 
-        if (!id) {
-            return res.status(400).send("Informe o ID da categoria.");
-        }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
 
-        const resultado = await categoriaServices.getCategoria(id);
-        res.status(200).send(resultado);
-
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao buscar categoria.");
-    }
+    return res.status(500).json({ message: "Erro ao buscar categoria." });
+  }
 }
 
 async function createCategoria(req, res) {
-    try {
-        const { nome } = req.body;
+  try {
+    const { nome } = req.body;
 
-        if (!nome) {
-            return res.status(400).send("O nome da categoria é obrigatório.");
-        }
-
-        const resultado = await categoriaServices.createCategoria(nome);
-        res.status(201).send(resultado);
-
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao criar categoria.");
+    if (!nome || nome.trim().length < 3) {
+      return res.status(400).json({
+        message: "Nome inválido. Mínimo 3 caracteres."
+      });
     }
+
+    const nova = await categoriaServices.createCategoria(nome.trim());
+    return res.status(201).json(nova);
+  } catch (err) {
+    console.error("categoriaController.createCategoria:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao criar categoria." });
+  }
 }
 
 async function updateCategoria(req, res) {
-    try {
-        const { id } = req.params;
-        const { nome } = req.body;
+  try {
+    const { id } = req.params;
+    const { nome } = req.body;
 
-        if (!id || !nome) {
-            return res.status(400).send("ID e nome são obrigatórios.");
-        }
-
-        const resultado = await categoriaServices.updateCategoria(id, nome);
-
-        res.status(200).send(resultado);
-
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao atualizar categoria.");
+    if (!nome || nome.trim().length < 3) {
+      return res.status(400).json({
+        message: "Nome inválido. Mínimo 3 caracteres."
+      });
     }
+
+    const atualizado = await categoriaServices.updateCategoria(id, nome.trim());
+    return res.status(200).json(atualizado);
+  } catch (err) {
+    console.error("categoriaController.updateCategoria:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao atualizar categoria." });
+  }
 }
 
 async function deleteCategoria(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        if (!id) {
-            return res.status(400).send("Informe o ID da categoria.");
-        }
+    const deletado = await categoriaServices.deleteCategoria(id);
+    return res.status(200).json(deletado);
+  } catch (err) {
+    console.error("categoriaController.deleteCategoria:", err);
 
-        const resultado = await categoriaServices.deleteCategoria(id);
-        res.status(200).send(resultado);
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao excluir categoria.");
-    }
+    return res.status(500).json({ message: "Erro ao excluir categoria." });
+  }
 }
 
 export default {
-    getAllCategorias,
-    getCategoria,
-    createCategoria,
-    updateCategoria,
-    deleteCategoria,
+  getAllCategorias,
+  getCategoria,
+  createCategoria,
+  updateCategoria,
+  deleteCategoria
 };

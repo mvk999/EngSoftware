@@ -1,38 +1,31 @@
+// utils/jwt.js
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-
-dotenv.config();
+import { AppError } from "./error.js";
 
 const SECRET = process.env.JWT_SECRET || "vought_super_secret";
 
-// gerar token JWT
-export function generateToken(payload, expiresIn = "2h") {
-    return jwt.sign(payload, SECRET, { expiresIn });
+export function generateToken(payload, expiresIn = null) {
+    try {
+        return jwt.sign(payload, SECRET, {
+            algorithm: "HS256",
+            expiresIn: expiresIn || process.env.JWT_EXPIRES_IN || "2h"
+        });
+    } catch (err) {
+        console.error("Erro ao gerar JWT:", err);
+        throw new AppError("Erro ao gerar token JWT.", 500);
+    }
 }
 
-// validar token JWT
 export function validateToken(token) {
     try {
         return jwt.verify(token, SECRET);
-    } catch (err) {
+    } catch {
         return null;
     }
 }
 
-// middleware de autenticação
-export function authMiddleware(req, res, next) {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader)
-        return res.status(401).json({ erro: "Token não fornecido" });
-
-    const [, token] = authHeader.split(" ");
-
-    const decoded = validateToken(token);
-
-    if (!decoded)
-        return res.status(401).json({ erro: "Token inválido ou expirado" });
-
-    req.user = decoded;
-    next();
-}
+export default {
+    generateToken,
+    validateToken,
+};

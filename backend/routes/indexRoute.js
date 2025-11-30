@@ -1,3 +1,4 @@
+// routes/indexRoute.js
 import express from "express";
 
 import authRoute from "./authRoute.js";
@@ -9,7 +10,9 @@ import pedidoRoute from "./pedidoRoute.js";
 
 const router = express.Router();
 
-// todas as rotas ficam organizadas aqui
+/**
+ * Prefixos conforme especificado no Swagger e no Documento de Requisitos
+ */
 router.use("/auth", authRoute);
 router.use("/cliente", clienteRoute);
 router.use("/categoria", categoriaRoute);

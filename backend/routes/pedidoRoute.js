@@ -1,119 +1,77 @@
+// routes/pedidoRoute.js
 import express from "express";
 import pedidoController from "../controllers/pedidoController.js";
+import authMiddleware from "../middlewares/authMiddleware.js";
+import adminMiddleware from "../middlewares/adminMiddleware.js";
+import validateId from "../middlewares/validateIdMiddleware.js";
+import errorBoundary from "../middlewares/errorBoundary.js";
 
 const router = express.Router();
 
 /**
- * @swagger
- * tags:
- *   name: Pedido
- *   description: Endpoints relacionados a pedidos
+ * ================================
+ * ROTAS DO CLIENTE
+ * ================================
  */
 
-/**
- * @swagger
- * /pedido:
- *   get:
- *     summary: Lista todos os pedidos
- *     tags: [Pedido]
- *     responses:
- *       200:
- *         description: Lista de pedidos retornada com sucesso
- */
-router.get("/", pedidoController.getAllPedidos);
+// Ver pedidos do próprio cliente
+router.get(
+    "/me",
+    authMiddleware,
+    errorBoundary(pedidoController.getPedidosByCliente)
+);
+
+// Criar pedido a partir do próprio carrinho
+router.post(
+    "/",
+    authMiddleware,
+    errorBoundary(pedidoController.criarPedido)
+);
+
+// Cancelar pedido do próprio cliente
+router.delete(
+    "/me/:id",
+    authMiddleware,
+    validateId("id"),
+    errorBoundary(pedidoController.cancelarPedidoCliente)
+);
 
 /**
- * @swagger
- * /pedido/{id}:
- *   get:
- *     summary: Busca um pedido pelo ID
- *     tags: [Pedido]
- *     parameters:
- *       - name: id
- *         in: path
- *         description: ID do pedido
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Pedido encontrado
- *       404:
- *         description: Pedido não encontrado
+ * ================================
+ * ROTAS DO ADMIN
+ * ================================
  */
-router.get("/:id", pedidoController.getPedido);
 
-/**
- * @swagger
- * /pedido/{clienteId}:
- *   post:
- *     summary: Cria um novo pedido com base no carrinho do cliente
- *     tags: [Pedido]
- *     parameters:
- *       - name: clienteId
- *         in: path
- *         required: true
- *         description: ID do cliente dono do carrinho
- *         schema:
- *           type: integer
- *     responses:
- *       201:
- *         description: Pedido criado com sucesso
- *       400:
- *         description: Carrinho vazio ou dados inválidos
- */
-router.post("/:clienteId", pedidoController.criarPedido);
+router.get(
+    "/",
+    authMiddleware,
+    adminMiddleware,
+    errorBoundary(pedidoController.getAllPedidos)
+);
 
-/**
- * @swagger
- * /pedido/{id}/status:
- *   put:
- *     summary: Atualiza o status de um pedido
- *     tags: [Pedido]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: ID do pedido
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [pendente, pago, enviado, entregue, cancelado]
- *     responses:
- *       200:
- *         description: Status atualizado com sucesso
- *       404:
- *         description: Pedido não encontrado
- */
-router.put("/:id/status", pedidoController.atualizarStatus);
+router.get(
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    validateId("id"),
+    errorBoundary(pedidoController.getPedido)
+);
 
-/**
- * @swagger
- * /pedido/{id}:
- *   delete:
- *     summary: Cancela um pedido pelo ID
- *     tags: [Pedido]
- *     parameters:
- *       - name: id
- *         in: path
- *         required: true
- *         description: ID do pedido
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: Pedido cancelado com sucesso
- *       404:
- *         description: Pedido não encontrado
- */
-router.delete("/:id", pedidoController.cancelarPedido);
+router.put(
+    "/:id/status",
+    authMiddleware,
+    adminMiddleware,
+    validateId("id"),
+    errorBoundary(pedidoController.atualizarStatus)
+);
+
+// Cancelar pedido — ADMIN
+router.delete(
+    "/:id",
+    authMiddleware,
+    adminMiddleware,
+    validateId("id"),
+    errorBoundary(pedidoController.cancelarPedidoAdmin)
+);
 
 export default router;

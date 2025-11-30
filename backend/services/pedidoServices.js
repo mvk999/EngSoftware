@@ -1,122 +1,155 @@
+// services/pedidoServices.js
 import pedidoRepository from "../repositories/pedidoRepository.js";
 import carrinhoRepository from "../repositories/carrinhoRepository.js";
 import clienteRepository from "../repositories/clienteRepository.js";
 import produtoRepository from "../repositories/produtoRepository.js";
+import db from "../repositories/bd.js";
 import { AppError } from "../utils/error.js";
 
 async function getAllPedidos() {
-    return await pedidoRepository.getAllPedidos();
+  return await pedidoRepository.getAllPedidos();
 }
 
 async function getPedido(id) {
-    const pedido = await pedidoRepository.getPedido(id);
+  if (!id) throw new AppError("ID do pedido é obrigatório.", 400);
 
-    if (!pedido) {
-        throw new AppError("Pedido não encontrado.", 404);
-    }
+  const pedido = await pedidoRepository.getPedido(id);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
-    return pedido;
+  return pedido;
+}
+
+async function getPedidosByCliente(clienteId) {
+  const cliente = await clienteRepository.getCliente(clienteId);
+  if (!cliente) throw new AppError("Cliente não encontrado.", 404);
+
+  return await pedidoRepository.getPedidosByCliente(clienteId);
 }
 
 async function criarPedido(clienteId) {
-    // validar cliente
-    const cliente = await clienteRepository.getCliente(clienteId);
-    if (!cliente) {
-        throw new AppError("Cliente não encontrado.", 404);
-    }
+  if (!clienteId) throw new AppError("Cliente inválido.", 400);
 
-    // validar carrinho
-    const itens = await carrinhoRepository.getCarrinho(clienteId);
-    if (!itens || itens.length === 0) {
-        throw new AppError("Carrinho vazio. Não é possível criar pedido.", 400);
-    }
+  const cliente = await clienteRepository.getCliente(clienteId);
+  if (!cliente) throw new AppError("Cliente não encontrado.", 404);
 
-    // validar estoque
+  const itens = await carrinhoRepository.getCarrinho(clienteId);
+  if (!itens || itens.length === 0)
+    throw new AppError("Carrinho vazio.", 400);
+
+  // ===================================================================
+  // CALCULAR TOTAL DO PEDIDO
+  // ===================================================================
+  let total = 0;
+
+  for (const item of itens) {
+    const produto = await produtoRepository.getProduto(item.id_produto);
+    if (!produto)
+      throw new AppError(`Produto ID ${item.id_produto} não encontrado.`, 404);
+
+    total += Number(produto.preco) * Number(item.quantidade);
+  }
+
+  // ===================================================================
+  // TRANSAÇÃO
+  // ===================================================================
+  return await db.transaction(async (trx) => {
+    
+    // Criar pedido COM valor_total correto
+    const pedido = await pedidoRepository.criarPedido(clienteId, total, trx);
+    const pedidoId = pedido.id_pedido;
+
+    // Adicionar itens ao pedido + diminuir estoque
     for (const item of itens) {
-        const produto = await produtoRepository.getProduto(item.produto_id);
+      const produto = await produtoRepository.getProduto(item.id_produto, trx);
 
-        if (!produto) {
-            throw new AppError(`Produto ID ${item.produto_id} não encontrado.`, 404);
-        }
+      await pedidoRepository.adicionarItemNoPedido(
+        pedidoId,
+        produto.id_produto,
+        item.quantidade,
+        produto.preco,
+        trx
+      );
 
-        if (produto.estoque < item.quantidade) {
-            throw new AppError(
-                `Estoque insuficiente para o produto "${produto.nome}".`,
-                400
-            );
-        }
+      await produtoRepository.diminuirEstoque(
+        produto.id_produto,
+        item.quantidade,
+        trx
+      );
     }
 
-    // criar pedido
-    const pedido = await pedidoRepository.criarPedido(clienteId);
-
-    // salvar itens
-    for (const item of itens) {
-        await pedidoRepository.adicionarItemNoPedido(
-            pedido.id,
-            item.produto_id,
-            item.quantidade,
-            item.preco
-        );
-
-        // atualizar estoque
-        await produtoRepository.diminuirEstoque(item.produto_id, item.quantidade);
-    }
-
-    // limpar carrinho
-    await carrinhoRepository.limparCarrinho(clienteId);
+    // Limpar carrinho
+    await carrinhoRepository.limparCarrinho(clienteId, trx);
 
     return {
-        mensagem: "Pedido criado com sucesso.",
-        pedidoId: pedido.id
+      mensagem: "Pedido criado com sucesso.",
+      pedidoId,
+      total
     };
+  });
 }
 
-async function atualizarStatus(id, novoStatus) {
-    const pedido = await pedidoRepository.getPedido(id);
+async function atualizarStatus(pedidoId, status) {
+  const permitido = ["pendente", "processando", "enviado", "entregue", "cancelado"];
 
-    if (!pedido) {
-        throw new AppError("Pedido não encontrado.", 404);
-    }
+  if (!permitido.includes(status))
+    throw new AppError("Status inválido.", 400);
 
-    const statusValidos = ["pendente", "processando", "enviado", "entregue", "cancelado"];
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
-    if (!statusValidos.includes(novoStatus)) {
-        throw new AppError("Status inválido.", 400);
-    }
-
-    return await pedidoRepository.atualizarStatus(id, novoStatus);
+  return await pedidoRepository.atualizarStatus(pedidoId, status);
 }
 
-async function cancelarPedido(id) {
-    const pedido = await pedidoRepository.getPedido(id);
+async function cancelarPedidoCliente(pedidoId, clienteId) {
+  if (!pedidoId) throw new AppError("ID do pedido é obrigatório.", 400);
 
-    if (!pedido) {
-        throw new AppError("Pedido não encontrado.", 404);
-    }
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
-    if (pedido.status === "cancelado") {
-        throw new AppError("Pedido já está cancelado.", 400);
-    }
+  if (pedido.id_cliente !== clienteId)
+    throw new AppError("Sem permissão.", 403);
 
-    if (pedido.status === "entregue") {
-        throw new AppError("Não é possível cancelar um pedido já entregue.", 400);
-    }
+  if (pedido.status === "cancelado")
+    throw new AppError("Pedido já está cancelado.", 400);
 
-    // restaurar estoque
-    const itens = await pedidoRepository.getItensPedido(id);
+  if (pedido.status === "entregue")
+    throw new AppError("Não é possível cancelar um pedido já entregue.", 400);
+
+  return await db.transaction(async (trx) => {
+    const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
 
     for (const item of itens) {
-        await produtoRepository.aumentarEstoque(item.produto_id, item.quantidade);
+      await produtoRepository.aumentarEstoque(
+        item.id_produto,
+        item.quantidade,
+        trx
+      );
     }
 
-    return await pedidoRepository.atualizarStatus(id, "cancelado");
+    return await pedidoRepository.atualizarStatus(
+      pedidoId,
+      "cancelado",
+      trx
+    );
+  });
+}
+
+async function cancelarPedidoAdmin(pedidoId) {
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
+
+  if (pedido.status === "cancelado")
+    throw new AppError("Pedido já está cancelado.", 400);
+
+  return await pedidoRepository.atualizarStatus(pedidoId, "cancelado");
 }
 
 export default {
-    getAllPedidos,
-    getPedido,
-    criarPedido,
-    atualizarStatus,
-    cancelarPedido
+  getAllPedidos,
+  getPedido,
+  getPedidosByCliente,
+  criarPedido,
+  atualizarStatus,
+  cancelarPedidoCliente,
+  cancelarPedidoAdmin
 };
