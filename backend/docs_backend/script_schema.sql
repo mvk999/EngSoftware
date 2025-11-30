@@ -1,6 +1,6 @@
 /* ============================================================
     BANCO DE DADOS — Vought Tech
-    Schema alinhado com Documento de Requisitos
+    Schema atualizado e compatível com o backend atual
 ============================================================ */
 
 /* ------------------------------------------------------------
@@ -44,12 +44,11 @@ CREATE TABLE IF NOT EXISTS produtos (
 /* ------------------------------------------------------------
    4) TABELA: carrinho
 ------------------------------------------------------------ */
-
 CREATE TABLE IF NOT EXISTS carrinho (
     id_carrinho SERIAL PRIMARY KEY,
-    id_cliente INT NOT NULL,
-    id_produto INT NOT NULL,
-    quantidade INT NOT NULL CHECK (quantidade > 0),
+    id_cliente  INT NOT NULL,
+    id_produto  INT NOT NULL,
+    quantidade  INT NOT NULL CHECK (quantidade > 0),
 
     CONSTRAINT fk_carrinho_cliente FOREIGN KEY (id_cliente)
         REFERENCES usuarios(id_usuario)
@@ -61,11 +60,8 @@ CREATE TABLE IF NOT EXISTS carrinho (
     CONSTRAINT unique_cliente_produto UNIQUE (id_cliente, id_produto)
 );
 
-
 /* ------------------------------------------------------------
    5) TABELA: pedidos
-   STATUS em minúsculo (coerente com RF-008):
-       'pendente', 'processando', 'enviado', 'entregue', 'cancelado'
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS pedidos (
     id_pedido    SERIAL PRIMARY KEY,
@@ -78,7 +74,6 @@ CREATE TABLE IF NOT EXISTS pedidos (
     CONSTRAINT fk_pedido_cliente
         FOREIGN KEY (id_cliente)
         REFERENCES usuarios(id_usuario)
-
 );
 
 /* ------------------------------------------------------------
@@ -103,7 +98,6 @@ CREATE TABLE IF NOT EXISTS itens_pedido (
 
 /* ------------------------------------------------------------
    7) TABELA: auth_failures
-   (apoia RNF de segurança, embora não conste no dicionário)
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS auth_failures (
     email         VARCHAR(100) PRIMARY KEY,
@@ -113,13 +107,16 @@ CREATE TABLE IF NOT EXISTS auth_failures (
 
 /* ------------------------------------------------------------
    8) TABELA: tokens_reset
-   Alinhada com dicionário: campo token e data_expiracao
+   — Alinhada com o backend atualizado
+   — token_hash é usado pelo Node
+   — id_usuario precisa ser UNIQUE para ON CONFLICT funcionar
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS tokens_reset (
     id_token       SERIAL PRIMARY KEY,
-    id_usuario     INT NOT NULL,
-    token          VARCHAR(255) NOT NULL UNIQUE,
+    id_usuario     INT NOT NULL UNIQUE,
+    token_hash     TEXT NOT NULL,
     data_expiracao TIMESTAMP NOT NULL,
+    usado          BOOLEAN DEFAULT false,
 
     CONSTRAINT fk_token_usuario
         FOREIGN KEY (id_usuario)
