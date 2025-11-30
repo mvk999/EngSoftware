@@ -1,130 +1,140 @@
+// repositories/pedidoRepository.js
 import BD from "./bd.js";
 
-async function getAllPedidos() {
-    const conn = await BD.conectar();
+/**
+ * Repositório do módulo Pedidos.
+ * Tabelas:
+ *  - pedidos(id_pedido, id_cliente, status, data_criacao, valor_total)
+ *  - itens_pedido(id_pedido, id_produto, quantidade, preco_unitario)
+ */
 
-    const sql = `
-        SELECT id_pedido as id, id_cliente as cliente_id, id_endereco as endereco_id, data_pedido as criado_em, status, valor_total
-        FROM pedidos
-        ORDER BY id_pedido DESC;
-    `;
-
-    try {
-        const query = await conn.query(sql);
-        return query.rows;
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+async function getAllPedidos(trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM pedidos
+    ORDER BY id_pedido DESC;
+  `;
+  try {
+    const q = await client.query(sql);
+    return q.rows;
+  } finally {
+    if (!trx) client.release();
+  }
 }
 
-async function getPedido(id) {
-    const conn = await BD.conectar();
-
-    const sql = `
-        SELECT id_pedido as id, id_cliente as cliente_id, id_endereco as endereco_id, data_pedido as criado_em, status, valor_total
-        FROM pedidos
-        WHERE id_pedido = $1;
-    `;
-
-    try {
-        const query = await conn.query(sql, [id]);
-        return query.rows[0];
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+async function getPedido(id, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM pedidos
+    WHERE id_pedido = $1;
+  `;
+  try {
+    const q = await client.query(sql, [id]);
+    return q.rows[0] || null;
+  } finally {
+    if (!trx) client.release();
+  }
 }
 
-async function criarPedido(clienteId) {
-    const conn = await BD.conectar();
-
-    const sql = `
-        INSERT INTO pedidos (id_cliente, status, data_pedido, valor_total)
-        VALUES ($1, 'pendente', NOW(), 0)
-        RETURNING id_pedido as id, id_cliente as cliente_id, id_endereco as endereco_id, data_pedido as criado_em, status, valor_total;
-    `;
-
-    try {
-        const query = await conn.query(sql, [clienteId]);
-        return query.rows[0];
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+async function getPedidosByCliente(clienteId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM pedidos
+    WHERE id_cliente = $1
+    ORDER BY id_pedido DESC;
+  `;
+  try {
+    const q = await client.query(sql, [clienteId]);
+    return q.rows;
+  } finally {
+    if (!trx) client.release();
+  }
 }
 
-async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnitario) {
-    const conn = await BD.conectar();
-
-    const sql = `
-        INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
-        VALUES ($1, $2, $3, $4)
-        RETURNING id_item as id, id_pedido as pedido_id, id_produto as produto_id, quantidade, preco_unitario;
-    `;
-
-    try {
-        const query = await conn.query(sql, [
-            pedidoId,
-            produtoId,
-            quantidade,
-            precoUnitario
-        ]);
-        return query.rows[0];
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+/**
+ * AGORA correto:
+ * criarPedido(clienteId, valorTotal, trx)
+ */
+async function criarPedido(clienteId, valorTotal, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    INSERT INTO pedidos (id_cliente, status, valor_total)
+    VALUES ($1, 'pendente', $2)
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [clienteId, valorTotal]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
 }
 
-async function getItensPedido(pedidoId) {
-    const conn = await BD.conectar();
-
-    const sql = `
-        SELECT id_item as id, id_pedido as pedido_id, id_produto as produto_id, quantidade, preco_unitario
-        FROM itens_pedido
-        WHERE id_pedido = $1;
-    `;
-
-    try {
-        const query = await conn.query(sql, [pedidoId]);
-        return query.rows;
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnitario, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario)
+    VALUES ($1, $2, $3, $4)
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [
+      pedidoId,
+      produtoId,
+      quantidade,
+      precoUnitario
+    ]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
 }
 
-async function atualizarStatus(id, novoStatus) {
-    const conn = await BD.conectar();
+async function getItensPedido(pedidoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM itens_pedido
+    WHERE id_pedido = $1;
+  `;
+  try {
+    const q = await client.query(sql, [pedidoId]);
+    return q.rows;
+  } finally {
+    if (!trx) client.release();
+  }
+}
 
-    const sql = `
-        UPDATE pedidos
-        SET status = $1
-        WHERE id_pedido = $2
-        RETURNING id_pedido as id, id_cliente as cliente_id, id_endereco as endereco_id, data_pedido as criado_em, status, valor_total;
-    `;
+async function atualizarStatus(idPedido, novoStatus, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET status = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [novoStatus, idPedido]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
 
-    try {
-        const query = await conn.query(sql, [novoStatus, id]);
-        return query.rows[0];
-    } catch (err) {
-        console.log(err);
-    } finally {
-        conn.release();
-    }
+async function transaction(cb) {
+  return BD.transaction(cb);
 }
 
 export default {
-    getAllPedidos,
-    getPedido,
-    criarPedido,
-    adicionarItemNoPedido,
-    getItensPedido,
-    atualizarStatus
+  getAllPedidos,
+  getPedido,
+  getPedidosByCliente,
+  criarPedido,
+  adicionarItemNoPedido,
+  getItensPedido,
+  atualizarStatus,
+  transaction
 };

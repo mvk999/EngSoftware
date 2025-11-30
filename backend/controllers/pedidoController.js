@@ -1,87 +1,175 @@
-import pedidoServices from "../services/pedidoServices.js";
+// controllers/pedidoController.js
+import pedidoService from "../services/pedidoServices.js";
 import { AppError } from "../utils/error.js";
 
+// =========================
+// ADMIN — listar todos
+// =========================
 async function getAllPedidos(req, res) {
-    try {
-        const resultado = await pedidoServices.getAllPedidos();
-        res.status(200).send(resultado);
+  try {
+    const pedidos = await pedidoService.getAllPedidos();
+    return res.status(200).json(pedidos);
+  } catch (err) {
+    console.error("pedidoController.getAllPedidos:", err);
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) return res.status(err.statusCode).send(err.message);
-        res.status(500).send("Erro ao buscar pedidos.");
-    }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao buscar pedidos." });
+  }
 }
 
+// =========================
+// ADMIN — pedido por ID
+// =========================
 async function getPedido(req, res) {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        if (!id) return res.status(400).send("Informe o ID do pedido.");
+    const pedido = await pedidoService.getPedido(id);
 
-        const resultado = await pedidoServices.getPedido(id);
-        res.status(200).send(resultado);
+    return res.status(200).json(pedido);
+  } catch (err) {
+    console.error("pedidoController.getPedido:", err);
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) return res.status(err.statusCode).send(err.message);
-        res.status(500).send("Erro ao buscar pedido.");
-    }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao buscar pedido." });
+  }
 }
 
+// =========================
+// CLIENTE — histórico próprio
+// =========================
+async function getPedidosByCliente(req, res) {
+  try {
+    const clienteId = req.user.id;
+
+    const pedidos = await pedidoService.getPedidosByCliente(clienteId);
+
+    return res.status(200).json(pedidos);
+  } catch (err) {
+    console.error("pedidoController.getPedidosByCliente:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao buscar pedidos." });
+  }
+}
+
+// =========================
+// CLIENTE — criar pedido
+// =========================
 async function criarPedido(req, res) {
-    try {
-        const { clienteId } = req.params;
+  try {
+    const clienteId = req.user.id;
 
-        if (!clienteId) return res.status(400).send("Informe o ID do cliente.");
+    const pedido = await pedidoService.criarPedido(clienteId);
 
-        const resultado = await pedidoServices.criarPedido(clienteId);
-        res.status(201).send(resultado);
+    return res.status(201).json(pedido);
+  } catch (err) {
+    console.error("pedidoController.criarPedido:", err);
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) return res.status(err.statusCode).send(err.message);
-        res.status(500).send("Erro ao criar pedido.");
-    }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao criar pedido." });
+  }
 }
 
+// =========================
+// ADMIN — atualizar status
+// =========================
 async function atualizarStatus(req, res) {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
 
-        if (!id || !status) return res.status(400).send("ID e status são obrigatórios.");
+    const validos = [
+      "pendente",
+      "processando",
+      "enviado",
+      "entregue",
+      "cancelado"
+    ];
 
-        const resultado = await pedidoServices.atualizarStatus(id, status);
-        res.status(200).send(resultado);
-
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) return res.status(err.statusCode).send(err.message);
-        res.status(500).send("Erro ao atualizar status do pedido.");
+    if (!validos.includes(status)) {
+      return res.status(400).json({
+        message: "Status inválido. Utilize: " + validos.join(", ")
+      });
     }
+
+    const atualizado = await pedidoService.atualizarStatus(
+      id,
+      status,
+      req.user.id // admin responsável
+    );
+
+    return res.status(200).json(atualizado);
+  } catch (err) {
+    console.error("pedidoController.atualizarStatus:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao atualizar status." });
+  }
 }
 
-async function cancelarPedido(req, res) {
-    try {
-        const { id } = req.params;
+// =========================
+// CLIENTE — cancelar pedido próprio
+// =========================
+async function cancelarPedidoCliente(req, res) {
+  try {
+    const { id } = req.params;
+    const clienteId = req.user.id;
 
-        if (!id) return res.status(400).send("Informe o ID do pedido.");
+    const resultado = await pedidoService.cancelarPedidoCliente(
+      id,
+      clienteId
+    );
 
-        const resultado = await pedidoServices.cancelarPedido(id);
-        res.status(200).send(resultado);
+    return res.status(200).json(resultado);
+  } catch (err) {
+    console.error("pedidoController.cancelarPedidoCliente:", err);
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) return res.status(err.statusCode).send(err.message);
-        res.status(500).send("Erro ao cancelar pedido.");
-    }
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao cancelar pedido." });
+  }
+}
+
+// =========================
+// ADMIN — cancelar pedido
+// =========================
+async function cancelarPedidoAdmin(req, res) {
+  try {
+    const { id } = req.params;
+
+    const resultado = await pedidoService.cancelarPedidoAdmin(id);
+
+    return res.status(200).json(resultado);
+  } catch (err) {
+    console.error("pedidoController.cancelarPedidoAdmin:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res
+      .status(500)
+      .json({ message: "Erro ao cancelar pedido (admin)." });
+  }
 }
 
 export default {
-    getAllPedidos,
-    getPedido,
-    criarPedido,
-    atualizarStatus,
-    cancelarPedido
+  getAllPedidos,
+  getPedido,
+  getPedidosByCliente,
+  criarPedido,
+  atualizarStatus,
+  cancelarPedidoCliente,
+  cancelarPedidoAdmin
 };

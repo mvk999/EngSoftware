@@ -1,132 +1,143 @@
+// controllers/carrinhoController.js
 import carrinhoServices from "../services/carrinhoServices.js";
 import { AppError } from "../utils/error.js";
 
 async function getCarrinho(req, res) {
-    try {
-        // pegar variáveis
-        const { clienteId } = req.params;
+  try {
+    const clienteId = req.user.id;
 
-        // validar
-        if (!clienteId) {
-            return res.status(400).send("Informe o ID do cliente.");
-        }
+    const resultado = await carrinhoServices.getCarrinho(clienteId);
 
-        // chamar service
-        const resultado = await carrinhoServices.getCarrinho(clienteId);
+    return res.status(200).json(resultado);
+  } catch (err) {
+    console.error("carrinhoController.getCarrinho:", err);
 
-        res.status(200).send(resultado);
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao buscar carrinho.");
-    }
+    return res.status(500).json({ message: "Erro ao buscar carrinho." });
+  }
 }
 
 async function adicionarItem(req, res) {
-    try {
-        // pegar variáveis
-        const { clienteId } = req.params;
-        const { produtoId, quantidade } = req.body;
+  try {
+    const clienteId = req.user.id;
+    const { idProduto, quantidade, produtoId } = req.body;
 
-        // validar
-        if (!clienteId || !produtoId || !quantidade) {
-            return res.status(400).send("clienteId, produtoId e quantidade são obrigatórios.");
-        }
+    // Aceita tanto idProduto quanto produtoId para compatibilidade
+    const idProd = idProduto || produtoId;
 
-        // chamar service
-        const resultado = await carrinhoServices.adicionarItem(clienteId, produtoId, quantidade);
+    if (!idProd || quantidade == null)
+      return res.status(400).json({
+        message: "idProduto e quantidade são obrigatórios."
+      });
 
-        res.status(200).send(resultado);
+    if (quantidade < 1)
+      return res.status(400).json({
+        message: "Quantidade deve ser no mínimo 1 (RBR-110)."
+      });
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao adicionar item ao carrinho.");
-    }
+    const resultado = await carrinhoServices.adicionarItem(
+      clienteId,
+      idProd,
+      quantidade
+    );
+
+    return res.status(201).json(resultado);
+  } catch (err) {
+    console.error("carrinhoController.adicionarItem:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({
+      message: "Erro ao adicionar item ao carrinho."
+    });
+  }
 }
 
 async function atualizarItem(req, res) {
-    try {
-        // pegar variáveis
-        const { clienteId, produtoId } = req.params;
-        const { quantidade } = req.body;
+  try {
+    const clienteId = req.user.id;
+    const { produtoId } = req.params;
+    const { quantidade } = req.body;
 
-        // validar
-        if (!clienteId || !produtoId || !quantidade) {
-            return res.status(400).send("clienteId, produtoId e quantidade são obrigatórios.");
-        }
+    if (!quantidade)
+      return res
+        .status(400)
+        .json({ message: "Quantidade é obrigatória." });
 
-        // chamar service
-        const resultado = await carrinhoServices.atualizarItem(clienteId, produtoId, quantidade);
+    if (quantidade < 1)
+      return res.status(400).json({
+        message: "Quantidade deve ser no mínimo 1 (RBR-110)."
+      });
 
-        res.status(200).send(resultado);
+    const resultado = await carrinhoServices.atualizarItem(
+      clienteId,
+      produtoId,
+      quantidade
+    );
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao atualizar item do carrinho.");
-    }
+    return res.status(200).json(resultado);
+  } catch (err) {
+    console.error("carrinhoController.atualizarItem:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({
+      message: "Erro ao atualizar item do carrinho."
+    });
+  }
 }
 
 async function removerItem(req, res) {
-    try {
-        // pegar variáveis
-        const { clienteId, produtoId } = req.params;
+  try {
+    const clienteId = req.user.id;
+    const { produtoId } = req.params;
 
-        // validar
-        if (!clienteId || !produtoId) {
-            return res.status(400).send("clienteId e produtoId são obrigatórios.");
-        }
+    await carrinhoServices.removerItem(clienteId, produtoId);
 
-        // chamar service
-        const resultado = await carrinhoServices.removerItem(clienteId, produtoId);
+    return res
+      .status(200)
+      .json({ message: "Item removido com sucesso." });
+  } catch (err) {
+    console.error("carrinhoController.removerItem:", err);
 
-        res.status(200).send(resultado);
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao remover item do carrinho.");
-    }
+    return res
+      .status(500)
+      .json({ message: "Erro ao remover item do carrinho." });
+  }
 }
 
 async function limparCarrinho(req, res) {
-    try {
-        // pegar variáveis
-        const { clienteId } = req.params;
+  try {
+    const clienteId = req.user.id;
 
-        // validar
-        if (!clienteId) {
-            return res.status(400).send("Informe o ID do cliente.");
-        }
+    await carrinhoServices.limparCarrinho(clienteId);
 
-        // chamar service
-        await carrinhoServices.limparCarrinho(clienteId);
+    return res
+      .status(200)
+      .json({ message: "Carrinho esvaziado com sucesso." });
+  } catch (err) {
+    console.error("carrinhoController.limparCarrinho:", err);
 
-        res.status(200).send("Carrinho esvaziado com sucesso.");
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
 
-    } catch (err) {
-        console.log(err);
-        if (err instanceof AppError) {
-            return res.status(err.statusCode).send(err.message);
-        }
-        res.status(500).send("Erro ao limpar carrinho.");
-    }
+    return res
+      .status(500)
+      .json({ message: "Erro ao limpar carrinho." });
+  }
 }
 
 export default {
-    getCarrinho,
-    adicionarItem,
-    atualizarItem,
-    removerItem,
-    limparCarrinho
+  getCarrinho,
+  adicionarItem,
+  atualizarItem,
+  removerItem,
+  limparCarrinho
 };
