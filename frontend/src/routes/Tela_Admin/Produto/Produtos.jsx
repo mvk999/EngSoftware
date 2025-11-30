@@ -6,7 +6,7 @@ import NavBarAdmin from '../NavBarAdmin';
 import ProdutoTable from './Table';
 import ProdutoModal from './ProdutoModal';
 
-const API_BASE_URL = 'http://localhost:8080'; // ajuste se sua API estiver em outra porta/host
+const API_BASE_URL = 'http://localhost:3000'; // ajuste se sua API estiver em outra porta/host
 
 function Produtos() {
   const [produtos, setProdutos] = useState([]);
