@@ -4,78 +4,11 @@ import NavBarAdmin from '../NavBarAdmin';
 import PedidosTable from './PedidosTable';
 import PedidoModal from './PedidoModal';
 
-// ===== MOCKS INICIAIS =====
-
-// USUÁRIOS (tabela 6.1)
-const mockUsuarios = [
-  {
-    idUsuario: 101,
-    nome: 'João Silva',
-    email: 'joao@example.com',
-    cpf: '12345678901',
-    senha: 'hash',
-    tipo: 'CLIENTE',
-  },
-  {
-    idUsuario: 102,
-    nome: 'Maria Souza',
-    email: 'maria@example.com',
-    cpf: '98765432100',
-    senha: 'hash',
-    tipo: 'CLIENTE',
-  },
-];
-
-// ENDEREÇOS (tabela 6.2)
-const mockEnderecos = [
-  {
-    idEndereco: 201,
-    idUsuario: 101,
-    logradouro: 'Rua A',
-    numero: '123',
-    complemento: 'Ap 101',
-    bairro: 'Centro',
-    cidade: 'Lavras',
-    estado: 'MG',
-    cep: '37200000',
-  },
-  {
-    idEndereco: 202,
-    idUsuario: 102,
-    logradouro: 'Rua B',
-    numero: '456',
-    complemento: '',
-    bairro: 'Bairro B',
-    cidade: 'Lavras',
-    estado: 'MG',
-    cep: '37200001',
-  },
-];
-
-// PEDIDOS (tabela 6.5)
-const mockPedidos = [
-  {
-    idPedido: 1,
-    idCliente: 101,
-    idEndereco: 201,
-    dataPedido: '2025-11-10T15:30',
-    status: 'Aguardando',
-    valorTotal: 549.9,
-  },
-  {
-    idPedido: 2,
-    idCliente: 102,
-    idEndereco: 202,
-    dataPedido: '2025-11-11T09:10',
-    status: 'Enviado',
-    valorTotal: 1299.0,
-  },
-];
 
 function Pedidos() {
-  const [pedidos, setPedidos] = useState(mockPedidos);
-  const [usuarios, setUsuarios] = useState(mockUsuarios);
-  const [enderecos, setEnderecos] = useState(mockEnderecos);
+  const [pedidos, setPedidos] = useState();
+  const [usuarios, setUsuarios] = useState();
+  const [enderecos, setEnderecos] = useState();
 
   const [showModal, setShowModal] = useState(false);
   const [modoModal, setModoModal] = useState('editar'); // 'editar' ou 'cadastrar'
@@ -95,7 +28,7 @@ function Pedidos() {
     setModoModal('editar');
     setShowModal(true);
   };
-
+  
   // Abrir modal para CADASTRAR novo pedido + novo cliente + novo endereço
   const handleAbrirModalCadastrar = () => {
     setPedidoSelecionado(null);
@@ -176,6 +109,17 @@ function Pedidos() {
     setUsuarioSelecionado(null);
     setEnderecoSelecionado(null);
   };
+  const handleDeletePedido = async (idPedido) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/pedido/${idPedido}`);
+
+      setPedidos((prev) =>
+        prev.filter((p) => p.idPedido !== idPedido)
+      );
+    } catch (err) {
+      console.error("Erro ao excluir pedido:", err);
+    }
+  };
 
   return (
     <div className='Container'>
@@ -201,6 +145,7 @@ function Pedidos() {
         <PedidosTable
           pedidos={pedidos}
           onEditarPedido={handleAbrirModalEditar}
+          onDeletePedido={handleDeletePedido}
         />
 
         <button

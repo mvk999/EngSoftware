@@ -1,40 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import './ProdutoModal.css';
-import EditIcon from '@mui/icons-material/Edit';
+import React, { useState, useEffect } from "react";
+import "./ProdutoModal.css";
+import EditIcon from "@mui/icons-material/Edit";
 
 function ProdutoModal({
   isOpen,
   onClose,
   onConfirm,
-  categoria = null,     // objeto completo da linha
-  categoriaNome = '',   // compatibilidade com versão antiga (se vier só o nome)
-  modo = 'editar',      // 'editar' ou 'cadastrar'
+  produto = null,
+  listaCategorias = [],
+  modo = "editar",
 }) {
   const [formData, setFormData] = useState({
-    id: '',
-    idcategoria: '',
-    name: '',
-    descricao: '',
-    preco: '',
-    estoque: '',
+    id: "",
+    idCategoria: "",
+    nome: "",
+    descricao: "",
+    preco: "",
+    estoque: "",
   });
 
-  // Preenche os campos sempre que abrir / trocar categoria
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        id: categoria?.id || '',
-        idcategoria: categoria?.idcategoria || '',
-        name: categoria?.name || categoriaNome || '',
-        descricao: categoria?.descricao || '',
-        preco: categoria?.preco || '',
-        estoque:
-          categoria?.estoque !== undefined && categoria?.estoque !== null
-            ? String(categoria.estoque)
-            : '',
+        id: produto?.id ?? "",
+        idCategoria: produto?.idCategoria ?? "",
+        nome: produto?.nome ?? "",
+        descricao: produto?.descricao ?? "",
+        preco: produto?.preco ?? "",
+        estoque: produto?.estoque ?? "",
       });
+    } else {
+      resetForm();
     }
-  }, [isOpen, categoria, categoriaNome]);
+  }, [isOpen, produto]);
 
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({
@@ -45,49 +43,41 @@ function ProdutoModal({
 
   const resetForm = () => {
     setFormData({
-      id: '',
-      idcategoria: '',
-      name: '',
-      descricao: '',
-      preco: '',
-      estoque: '',
+      id: "",
+      idCategoria: "",
+      nome: "",
+      descricao: "",
+      preco: "",
+      estoque: "",
     });
   };
 
   const handleConfirm = () => {
-    if (!formData.name.trim()) return; // validação mínima
+    if (!formData.nome.trim() || !formData.idCategoria) {
+      alert("Preencha o Nome e selecione uma Categoria.");
+      return;
+    }
 
     const payload = {
-      ...categoria, // preserva o que vier do row original
-      ...formData,
-      estoque:
-        formData.estoque === '' ? 0 : Number(formData.estoque), // converte pra número
+      nome: formData.nome,
+      descricao: formData.descricao,
+      preco: formData.preco,
+      estoque: formData.estoque,
+      idCategoria: formData.idCategoria,
     };
 
-    if (onConfirm) {
-      onConfirm(payload);
+    // Só envia ID no modo editar
+    if (modo === "editar") {
+      payload.id = formData.id;
     }
 
-    if (modo === 'cadastrar') {
-      resetForm();
-    }
+    onConfirm(payload);
   };
 
   const handleCancel = () => {
     resetForm();
     onClose && onClose();
   };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleConfirm();
-    } else if (e.key === 'Escape') {
-      handleCancel();
-    }
-  };
-
-  const titulo = modo === 'editar' ? 'Editar Produto' : 'Cadastrar Produto';
-  const botaoTexto = modo === 'editar' ? 'Confirmar' : 'Cadastrar';
 
   if (!isOpen) return null;
 
@@ -97,18 +87,15 @@ function ProdutoModal({
         {/* Header */}
         <div className="modal-header">
           <div className="modal-icon">
-            <EditIcon
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FFC831',
-              }}
-            />
+            <EditIcon style={{ color: "#FFC831" }} />
           </div>
+
           <div className="modal-text-wrapper">
-            <h1 className="modal-title">{titulo}</h1>
+            <h1 className="modal-title">
+              {modo === "editar" ? "Editar Produto" : "Cadastrar Produto"}
+            </h1>
           </div>
+
           <button
             className="modal-close-btn"
             onClick={handleCancel}
@@ -125,31 +112,39 @@ function ProdutoModal({
           </button>
         </div>
 
-        {/* Inputs */}
+        {/* Campos */}
         <div className="modal-input-section">
-          <div className="input-field">
-            <label className="input-label">ID</label>
-            <input
-              type="text"
-              className="input-box"
-              placeholder="#1"
-              value={formData.id}
-              onChange={handleChange('id')}
-              onKeyDown={handleKeyPress}
-              disabled={modo === 'cadastrar'} // <--- trava no cadastro
-            />
-          </div>
+
+          {/* ID só é exibido no editar */}
+          {modo === "editar" ? (
+            <div className="input-field">
+              <label className="input-label">ID</label>
+              <input
+                type="text"
+                className="input-box"
+                value={formData.id}
+                disabled
+              />
+            </div>
+          ) : null}
 
           <div className="input-field">
-            <label className="input-label">ID-Categoria</label>
-            <input
-              type="text"
+            <label className="input-label">Categoria</label>
+            <select
               className="input-box"
-              placeholder="#C1"
-              value={formData.idcategoria}
-              onChange={handleChange('idcategoria')}
-              onKeyDown={handleKeyPress}
-            />
+              value={String(formData.idCategoria)}
+              onChange={handleChange("idCategoria")}
+            >
+              <option value="">Selecione...</option>
+              {listaCategorias.map((cat) => (
+                <option 
+                    key={cat.id ?? cat.idCategoria ?? cat.id_categoria ?? cat.ID}
+                    value={cat.id ?? cat.idCategoria ?? cat.id_categoria ?? cat.ID}
+                  >
+                    {cat.nome ?? cat.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="input-field">
@@ -157,10 +152,8 @@ function ProdutoModal({
             <input
               type="text"
               className="input-box"
-              placeholder="Nome do Produto"
-              value={formData.name}
-              onChange={handleChange('name')}
-              onKeyDown={handleKeyPress}
+              value={formData.nome}
+              onChange={handleChange("nome")}
             />
           </div>
 
@@ -168,24 +161,19 @@ function ProdutoModal({
             <label className="input-label">Descrição</label>
             <textarea
               className="input-box"
-              placeholder="Descrição do Produto"
-              value={formData.descricao}
-              onChange={handleChange('descricao')}
-              onKeyDown={handleKeyPress}
               rows={3}
-              style={{ resize: 'vertical' }}
+              value={formData.descricao}
+              onChange={handleChange("descricao")}
             />
           </div>
 
           <div className="input-field">
             <label className="input-label">Preço</label>
             <input
-              type="text"
+              type="number"
               className="input-box"
-              placeholder="R$ 0,00"
               value={formData.preco}
-              onChange={handleChange('preco')}
-              onKeyDown={handleKeyPress}
+              onChange={handleChange("preco")}
             />
           </div>
 
@@ -194,28 +182,17 @@ function ProdutoModal({
             <input
               type="number"
               className="input-box"
-              placeholder="0"
               value={formData.estoque}
-              onChange={handleChange('estoque')}
-              onKeyDown={handleKeyPress}
+              onChange={handleChange("estoque")}
             />
           </div>
         </div>
 
-        {/* Actions */}
         <div className="modal-actions">
-          <button
-            className="btn-confirm"
-            onClick={handleConfirm}
-            type="button"
-          >
-            {botaoTexto}
+          <button className="btn-confirm" onClick={handleConfirm}>
+            {modo === "editar" ? "Salvar" : "Cadastrar"}
           </button>
-          <button
-            className="btn-cancel"
-            onClick={handleCancel}
-            type="button"
-          >
+          <button className="btn-cancel" onClick={handleCancel}>
             Cancelar
           </button>
         </div>

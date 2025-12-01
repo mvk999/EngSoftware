@@ -16,20 +16,22 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const columns = [
-  { id: 'id', label: 'ID', minWidth: 80 },
-  { id: 'idcategoria', label: 'ID-CATEGORIA', minWidth: 110 },
-  { id: 'name', label: 'NOME', minWidth: 200 },
+  { id: 'id', label: 'ID', minWidth: 60 },
+  { id: 'idCategoria', label: 'ID-CATEGORIA', minWidth: 110 },
+  { id: 'nome', label: 'NOME', minWidth: 200 },
   { id: 'descricao', label: 'DESCRIÇÃO', minWidth: 260 },
-  { id: 'preco', label: 'PREÇO', minWidth: 100, align: 'right' },
+  {
+    id: 'preco',
+    label: 'PREÇO',
+    minWidth: 100,
+    align: 'right',
+    format: (val) => `R$ ${Number(val).toFixed(2)}`,
+  },
   { id: 'estoque', label: 'ESTOQUE', minWidth: 100, align: 'right' },
   { id: 'actions', label: 'AÇÕES', minWidth: 120, align: 'right' },
 ];
 
-function ProdutoTable({
-  produtos = [],
-  onEditarCategoria,
-  onDeleteProduto,
-}) {
+function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5;
 
@@ -38,15 +40,14 @@ function ProdutoTable({
   };
 
   const startIndex = (page - 1) * rowsPerPage;
-  const endIndex = startIndex + rowsPerPage;
-  const currentRows = produtos.slice(startIndex, endIndex);
+  const currentRows = produtos.slice(startIndex, startIndex + rowsPerPage);
 
   return (
     <Box
       sx={{
         p: 3,
         backgroundColor: '#15141B',
-        minHeight: '100vh',
+        width: '100%',
         fontFamily: 'Poppins, sans-serif',
         display: 'flex',
         justifyContent: 'center',
@@ -63,14 +64,7 @@ function ProdutoTable({
           border: 'none',
         }}
       >
-        {/* Título */}
-        <Box
-          sx={{
-            backgroundColor: '#191922',
-            p: 2.5,
-            borderBottom: 'none',
-          }}
-        >
+        <Box sx={{ backgroundColor: '#191922', p: 2.5, borderBottom: 'none' }}>
           <Typography
             sx={{
               color: '#C4CDD5',
@@ -84,7 +78,6 @@ function ProdutoTable({
           </Typography>
         </Box>
 
-        {/* Tabela */}
         <TableContainer sx={{ maxHeight: 'auto' }}>
           <Table aria-label="tabela de produtos">
             <TableHead>
@@ -115,16 +108,14 @@ function ProdutoTable({
             <TableBody>
               {currentRows.map((row, index) => (
                 <TableRow
-                  key={row.id}
+                  key={row.id || index}
                   sx={{
                     backgroundColor: '#191922',
                     borderBottom:
                       index < currentRows.length - 1
                         ? '1px solid #2a2f3f'
                         : 'none',
-                    '&:hover': {
-                      backgroundColor: '#1f2430',
-                    },
+                    '&:hover': { backgroundColor: '#1f2430' },
                   }}
                 >
                   {columns.map((column) => {
@@ -147,7 +138,9 @@ function ProdutoTable({
                           whiteSpace:
                             column.id === 'descricao' ? 'normal' : 'nowrap',
                           wordBreak:
-                            column.id === 'descricao' ? 'break-word' : 'normal',
+                            column.id === 'descricao'
+                              ? 'break-word'
+                              : 'normal',
                         }}
                       >
                         {column.id === 'actions' ? (
@@ -159,7 +152,6 @@ function ProdutoTable({
                               alignItems: 'center',
                             }}
                           >
-                            {/* EDITAR */}
                             <button
                               style={{
                                 background: 'none',
@@ -174,19 +166,12 @@ function ProdutoTable({
                               }}
                               title="Editar"
                               onClick={() =>
-                                onEditarCategoria && onEditarCategoria(row)
-                              }
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.opacity = '0.7')
-                              }
-                              onMouseLeave={(e) =>
-                                (e.currentTarget.style.opacity = '1')
+                                onEditarProduto && onEditarProduto(row)
                               }
                             >
                               <EditIcon sx={{ width: 20, height: 20 }} />
                             </button>
 
-                            {/* DELETAR */}
                             <button
                               style={{
                                 background: 'none',
@@ -203,16 +188,12 @@ function ProdutoTable({
                               onClick={() =>
                                 onDeleteProduto && onDeleteProduto(row.id)
                               }
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.opacity = '0.7')
-                              }
-                              onMouseLeave={(e) =>
-                                (e.currentTarget.style.opacity = '1')
-                              }
                             >
                               <DeleteIcon sx={{ width: 20, height: 20 }} />
                             </button>
                           </Box>
+                        ) : column.format ? (
+                          column.format(value)
                         ) : (
                           value
                         )}
@@ -225,7 +206,6 @@ function ProdutoTable({
           </Table>
         </TableContainer>
 
-        {/* Paginação */}
         <Box
           sx={{
             display: 'flex',
@@ -237,10 +217,17 @@ function ProdutoTable({
           }}
         >
           <Pagination
-            count={Math.ceil(produtos.length / rowsPerPage)}
+            count={Math.ceil(produtos.length / rowsPerPage) || 1}
             page={page}
             onChange={handleChangePage}
             size="large"
+            sx={{
+              '& .MuiPaginationItem-root': { color: '#C4CDD5' },
+              '& .Mui-selected': {
+                backgroundColor: '#FFC831 !important',
+                color: '#15141B',
+              },
+            }}
           />
         </Box>
       </Paper>

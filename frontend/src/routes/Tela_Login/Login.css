@@ -27,16 +27,17 @@ body {
 /* Card principal */
 .login-card {
   position: absolute;
-  width: 480px;     /* Diminuído */
-  height: 600px;    /* Diminuído */
+  width: 480px;
+  height: auto;    /* <-- deixa o card crescer conforme o conteúdo */
+  min-height: 600px;
   left: 260px;
-  top: 210px;
+  top: 130px;      /* <-- sobe um pouco o card */
 
   background: #D9D9D9;
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.25);
   border-radius: 18px;
 
-  padding: 30px 40px;
+  padding: 50px 50px 70px 50px;  /* <-- mais espaço */
   box-sizing: border-box;
   form{
     display: flex;
@@ -44,7 +45,6 @@ body {
     align-items: center;
   }
 }
-
 /* Voltar */
 .voltar {
   position: absolute;
@@ -122,16 +122,14 @@ body {
   color: #15141B;
 }
 
-/* Texto "Não tem conta?" */
+/* Texto inferior "já tem conta?" */
 .cadastro {
-  position: absolute;
-  bottom: 25px;
-  left: 120px; /* ajustado */
-  font-family: Poppins;
-  font-size: 14px;
-  font-weight: 500;
+  position: relative;
+  bottom: -25px; /* <-- empurra pra baixo */
+  left: 0;
+  text-align: center;
+  width: 100%;
 }
-
 .cadastro span {
   cursor: pointer;
   color: #000;

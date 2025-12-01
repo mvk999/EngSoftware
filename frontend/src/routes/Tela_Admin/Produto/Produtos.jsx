@@ -2,132 +2,262 @@
 import './Produto.css';
 import React, { useState, useEffect } from "react";
 import axios from 'axios';
+import { isAdmin } from '../../../utils/auth';
 import NavBarAdmin from '../NavBarAdmin';
 import ProdutoTable from './Table';
 import ProdutoModal from './ProdutoModal';
 
-const API_BASE_URL = 'http://localhost:3000'; // ajuste se sua API estiver em outra porta/host
+const API_BASE_URL = 'http://localhost:3000';
 
 function Produtos() {
   const [produtos, setProdutos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [modoModal, setModoModal] = useState('editar'); // 'editar' ou 'cadastrar'
+  const [modoModal, setModoModal] = useState('editar');
   const [produtoSelecionado, setProdutoSelecionado] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [autorizado, setAutorizado] = useState(true);
 
-  // =============================
-  // CARREGAR LISTA (GET /produto)
-  // =============================
-  const carregarProdutos = async () => {
-    try {
-      const resp = await axios.get(`${API_BASE_URL}/produto`);
-      // espera que resp.data seja um array de produtos
-      setProdutos(resp.data || []);
-    } catch (err) {
-      console.error('Erro ao buscar produtos:', err);
-    }
+  // Pega token JWT do localStorage
+  const getConfig = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    return { headers: { Authorization: `Bearer ${token}` } };
   };
 
   useEffect(() => {
-    carregarProdutos();
+    // Garante que somente ADMIN veja
+    if (!isAdmin()) {
+      setAutorizado(false);
+      alert("Acesso restrito ao Admin.");
+      return;
+    }
+
+    setAutorizado(true);
+    carregarDados();
   }, []);
 
-  // =============================
-  // ABRIR MODAL
-  // =============================
+  const carregarDados = async () => {
+  try {
+    setLoading(true);
+
+    const config = getConfig();
+
+    const [respProd, respCat] = await Promise.all([
+      axios.get(`${API_BASE_URL}/produto`, config || {}),
+      axios.get(`${API_BASE_URL}/categoria`, {})
+    ]);
+
+    // ⚠️ Normalização — garante id e idCategoria SEMPRE presentes
+    const produtosNormalizados = (respProd.data || []).map((p) => ({
+      id: p.id ?? p.idProduto ?? p.id_produto ?? p.ID ?? null,
+      nome: p.nome ?? p.name,
+      descricao: p.descricao ?? "",
+      preco: p.preco ?? 0,
+      estoque: p.estoque ?? 0,
+      
+      // Categoria pode vir:
+      // - p.idCategoria
+      // - p.id_categoria
+      // - p.categoria.id
+      idCategoria:
+        p.idCategoria ??
+        p.id_categoria ??
+        p.idcategoria ??
+        p.categoria?.id ??
+        null,
+    }));
+
+    setProdutos(produtosNormalizados);
+    setCategorias(respCat.data || []);
+
+  } catch (err) {
+    console.error('Erro ao carregar dados:', err);
+    alert("Erro ao carregar produtos/categorias.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  // Abrir modal para editar produto
   const handleAbrirModalEditar = (produto) => {
-    setProdutoSelecionado(produto);   // row completo vindo da tabela
+    setProdutoSelecionado(produto);
     setModoModal('editar');
     setShowModal(true);
   };
 
+  // Abrir modal para cadastrar novo produto
   const handleAbrirModalCadastrar = () => {
     setProdutoSelecionado(null);
     setModoModal('cadastrar');
     setShowModal(true);
   };
 
-  // ====================================================
-  // SALVAR (POST /produto ou PUT /produto/{id})
-  // ====================================================
-  const handleConfirmarModal = async (produtoEditadoOuNovo) => {
+  // Confirmação do modal (criar/editar)
+  const handleConfirmarModal = async (form) => {
+    const config = getConfig();
+    if (!config) {
+      alert("Token inválido ou ausente. Faça login novamente.");
+      return;
+    }
+
     try {
+      // Monta o payload exatamente como o schema Produto do JSON:
+      // { nome, descricao, preco, estoque, idCategoria }
+      const payload = {
+        nome: form.nome,
+        descricao: form.descricao,
+        preco: Number(String(form.preco).replace(',', '.')),
+        estoque: parseInt(form.estoque, 10),
+        idCategoria: parseInt(form.idCategoria, 10),
+      };
+
+      // Conversões seguras
+      const precoConvertido = Number(String(payload.preco).replace(",", "."));
+      const estoqueConvertido = Number(payload.estoque);
+
+      // Verificações
+      if (!payload.nome.trim()) {
+        alert("Nome é obrigatório.");
+        return;
+      }
+
+      if (!payload.idCategoria) {
+        alert("Selecione uma categoria.");
+        return;
+      }
+
+      if (isNaN(precoConvertido) || precoConvertido <= 0) {
+        alert("Preço inválido.");
+        return;
+      }
+
+      if (isNaN(estoqueConvertido) || estoqueConvertido < 0) {
+        alert("Estoque inválido.");
+        return;
+      }
+
+      // Aplicar valores convertidos no payload final
+      payload.preco = precoConvertido;
+      payload.estoque = estoqueConvertido;
+
+
       if (modoModal === 'editar') {
         // PUT /produto/{id}
-        const id = produtoEditadoOuNovo.id; // ajuste se no backend for idProduto etc.
-        const resp = await axios.put(
-          `${API_BASE_URL}/produto/${id}`,
-          produtoEditadoOuNovo
-        );
+        const id = form.id;
+        await axios.put(`${API_BASE_URL}/produto/${id}`, payload, config);
 
-        const produtoAtualizado = resp.data || produtoEditadoOuNovo;
-
+        // Atualiza lista local sem perder o restante dos dados
         setProdutos((prev) =>
-          prev.map((p) => (p.id === id ? produtoAtualizado : p))
+          prev.map((p) =>
+            p.id === id ? { ...p, ...payload, id } : p
+          )
         );
+        alert("Produto atualizado com sucesso.");
       } else {
         // POST /produto
-        const resp = await axios.post(
-          `${API_BASE_URL}/produto`,
-          produtoEditadoOuNovo
-        );
+        const resp = await axios.post(`${API_BASE_URL}/produto`, payload, config);
+        // Backend deve devolver o produto criado com id
+        const novoProduto = resp.data;
 
-        const produtoCriado = resp.data || produtoEditadoOuNovo;
+        if (novoProduto && novoProduto.id) {
+          setProdutos((prev) => [...prev, novoProduto]);
+        } else {
+          // Se não vier o objeto inteiro, recarrega da API
+          await carregarDados();
+        }
 
-        setProdutos((prev) => [...prev, produtoCriado]);
+        alert("Produto cadastrado com sucesso.");
       }
-    } catch (err) {
-      console.error('Erro ao salvar produto:', err);
-    } finally {
+
       setShowModal(false);
-      setProdutoSelecionado(null);
-    }
-  };
-
-  // ==========================================
-  // EXCLUIR (DELETE /produto/{id})
-  // ==========================================
-  const handleExcluirProduto = async (id) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/produto/${id}`);
-      setProdutos((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
-      console.error('Erro ao excluir produto:', err);
+      console.error("Erro ao salvar produto:", err);
+      const msg = err.response?.data?.erro || "Erro ao salvar produto.";
+      alert(msg);
     }
   };
 
-  const handleFecharModal = () => {
-    setShowModal(false);
-    setProdutoSelecionado(null);
+  // Excluir produto
+  const handleExcluirProduto = async (idProduto) => {
+    if (!idProduto) {
+      alert("Erro: ID de produto inválido.");
+      return;
+    }
+
+    if (!window.confirm("Deseja excluir este produto?")) return;
+
+    const config = getConfig();
+    if (!config) {
+      alert("Token inválido ou ausente. Faça login novamente.");
+      return;
+    }
+
+    try {
+      // DELETE /produto/{id}
+      await axios.delete(`${API_BASE_URL}/produto/${idProduto}`, config);
+      setProdutos((prev) => prev.filter((p) => p.id !== idProduto));
+      alert("Produto excluído com sucesso.");
+    } catch (err) {
+      console.error("Erro ao excluir produto:", err);
+      const msg = err.response?.data?.erro || "Erro ao excluir produto.";
+      alert(msg);
+    }
   };
+
+  if (!autorizado) {
+    // Não mostra nada da tela pra quem não é ADMIN
+    return (
+      <div className="Container" style={{ color: '#fff', padding: 20 }}>
+        Acesso restrito. Apenas administradores podem visualizar esta página.
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="Container" style={{ color: '#fff', padding: 20 }}>
+        Carregando...
+      </div>
+    );
+  }
 
   return (
-    <div className='Container'>
+    <div className="Container">
+      {/* Modal de criar/editar produto */}
       <ProdutoModal
         isOpen={showModal}
-        onClose={handleFecharModal}
+        onClose={() => setShowModal(false)}
         onConfirm={handleConfirmarModal}
-        categoria={produtoSelecionado}
+        produto={produtoSelecionado}
+        listaCategorias={categorias}
         modo={modoModal}
       />
 
+      {/* Navbar que você já tem pronta */}
       <NavBarAdmin />
 
-      <div className='ContentCategorias'>
-        <div className='TopContentCategorias'>
-          <img src="/src/assets/Avatar.svg" alt='Avatar' />
+      {/* Mantendo as classes originais para não quebrar o CSS */}
+      <div className="ContentCategorias">
+        <div className="TopContentCategorias">
+          <img src="/src/assets/Avatar.svg" alt="Avatar" />
           <button className="ButtonAdmin">Admin</button>
           <img src="/src/assets/ShopCart.svg" alt="Shop Cart" />
         </div>
 
+        {/* Tabela de produtos com ações de editar/deletar */}
         <ProdutoTable
           produtos={produtos}
-          onEditarCategoria={handleAbrirModalEditar}
+          onEditarProduto={handleAbrirModalEditar}
           onDeleteProduto={handleExcluirProduto}
         />
 
+        {/* Botão para abrir modal de cadastro */}
         <button
           className="ButtonAdmin"
           onClick={handleAbrirModalCadastrar}
+          style={{ marginTop: '20px' }}
         >
           Cadastrar Produtos
         </button>

@@ -14,8 +14,8 @@ function NavBarAdmin() {
         </div>
         <div className='BarraLateralLinks'>
             <button className='BotaoNavBar'><img className='IconNav' src={IconNav} alt='Icon'></img>Início</button>
-            <button className='BotaoNavBar'onClick={()=> navigate("/admin/pedidos")}><img className='IconNav' src={IconNav} alt='Icon'></img>Pedidos</button>
-            <button className='BotaoNavBar'onClick={()=> navigate("/admin/produtos")}><img className='IconNav' src={IconNav} alt='Icon'></img>Produtos</button>
+            <button className='BotaoNavBar'onClick={()=> navigate("/pedidos")}><img className='IconNav' src={IconNav} alt='Icon'></img>Pedidos</button>
+            <button className='BotaoNavBar'onClick={()=> navigate("/produtos")}><img className='IconNav' src={IconNav} alt='Icon'></img>Produtos</button>
         </div>
     </div>
   )
