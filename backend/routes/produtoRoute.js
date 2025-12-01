@@ -1,14 +1,16 @@
-// routes/produtoRoute.js
 import express from "express";
 import produtoController from "../controllers/produtoController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import adminMiddleware from "../middlewares/adminMiddleware.js";
 import validateId from "../middlewares/validateIdMiddleware.js";
 import errorBoundary from "../middlewares/errorBoundary.js";
+import upload from "../middlewares/upload.js";
 
 const router = express.Router();
 
-// PÚBLICO
+// -------------------------
+// ROTAS PÚBLICAS
+// -------------------------
 router.get("/", errorBoundary(produtoController.getProdutos));
 
 router.get(
@@ -17,11 +19,14 @@ router.get(
     errorBoundary(produtoController.getProduto)
 );
 
-// ADMIN
+// -------------------------
+// ROTAS ADMIN 
+// -------------------------
 router.post(
     "/",
     authMiddleware,
     adminMiddleware,
+    upload.single("imagem"),
     errorBoundary(produtoController.createProduto)
 );
 
@@ -30,6 +35,7 @@ router.put(
     authMiddleware,
     adminMiddleware,
     validateId("id"),
+    upload.single("imagem"),
     errorBoundary(produtoController.updateProduto)
 );
 

@@ -4,10 +4,8 @@ import { AppError } from "../utils/error.js";
 
 async function getProdutos(req, res) {
   try {
-    // Swagger: apenas ?q=
     const termo = req.query.q || null;
 
-    // Aceita filtros extras (não conflita com Swagger)
     const categoriaIdQuery =
       req.query.categoriaId ??
       req.query.idCategoria ??
@@ -26,55 +24,36 @@ async function getProdutos(req, res) {
     return res.status(200).json(produtos);
   } catch (err) {
     console.error("produtoController.getProdutos:", err);
-
-    if (err instanceof AppError)
-      return res.status(err.statusCode).json({ message: err.message });
-
     return res.status(500).json({ message: "Erro ao buscar produtos." });
   }
 }
 
-/**
- * POST /produto
- * Criação de produto (ADMIN)
- * Aceita no body:
- *  - nome
- *  - preco
- *  - descricao
- *  - estoque
- *  - categoriaId | idCategoria | id_categoria
- */
 async function createProduto(req, res) {
   try {
     const { nome, preco, descricao, estoque } = req.body;
 
-    // Aceita múltimos nomes para o mesmo campo:
     const categoriaId =
       req.body.categoriaId ??
       req.body.idCategoria ??
       req.body.id_categoria;
 
-    if (!categoriaId) {
-      return res.status(400).json({
-        message: "campo categoriaId (ou idCategoria / id_categoria) é obrigatório."
-      });
-    }
+    if (!categoriaId)
+      return res.status(400).json({ message: "categoriaId é obrigatório." });
+
+    const imagem = req.file ? req.file.filename : null;
 
     const novo = await produtoServices.createProduto(
       nome,
       preco,
       categoriaId,
       descricao,
-      estoque
+      estoque,
+      imagem
     );
 
     return res.status(201).json(novo);
   } catch (err) {
     console.error("produtoController.createProduto:", err);
-
-    if (err instanceof AppError)
-      return res.status(err.statusCode).json({ message: err.message });
-
     return res.status(500).json({ message: "Erro ao criar produto." });
   }
 }
@@ -84,12 +63,13 @@ async function updateProduto(req, res) {
     const { id } = req.params;
     const { nome, preco, descricao, estoque } = req.body;
 
-    // Também aceita os três formatos no update:
     const categoriaId =
       req.body.categoriaId ??
       req.body.idCategoria ??
       req.body.id_categoria ??
       null;
+
+    const imagem = req.file ? req.file.filename : null;
 
     const atualizado = await produtoServices.updateProduto(
       id,
@@ -97,16 +77,13 @@ async function updateProduto(req, res) {
       preco,
       categoriaId,
       descricao,
-      estoque
+      estoque,
+      imagem
     );
 
     return res.status(200).json(atualizado);
   } catch (err) {
     console.error("produtoController.updateProduto:", err);
-
-    if (err instanceof AppError)
-      return res.status(err.statusCode).json({ message: err.message });
-
     return res.status(500).json({ message: "Erro ao atualizar produto." });
   }
 }
@@ -119,10 +96,6 @@ async function deleteProduto(req, res) {
     return res.status(200).json(deletado);
   } catch (err) {
     console.error("produtoController.deleteProduto:", err);
-
-    if (err instanceof AppError)
-      return res.status(err.statusCode).json({ message: err.message });
-
     return res.status(500).json({ message: "Erro ao remover produto." });
   }
 }

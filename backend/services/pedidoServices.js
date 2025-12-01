@@ -1,8 +1,8 @@
-// services/pedidoServices.js
 import pedidoRepository from "../repositories/pedidoRepository.js";
 import carrinhoRepository from "../repositories/carrinhoRepository.js";
 import clienteRepository from "../repositories/clienteRepository.js";
 import produtoRepository from "../repositories/produtoRepository.js";
+import enderecoRepository from "../repositories/enderecoRepository.js"; 
 import db from "../repositories/bd.js";
 import { AppError } from "../utils/error.js";
 
@@ -26,21 +26,20 @@ async function getPedidosByCliente(clienteId) {
   return await pedidoRepository.getPedidosByCliente(clienteId);
 }
 
-async function criarPedido(clienteId) {
+async function criarPedido(clienteId, enderecoId) {
   if (!clienteId) throw new AppError("Cliente inválido.", 400);
 
   const cliente = await clienteRepository.getCliente(clienteId);
   if (!cliente) throw new AppError("Cliente não encontrado.", 404);
 
+  const endereco = await enderecoRepository.getEndereco(enderecoId); 
+  if (!endereco) throw new AppError("Endereço não encontrado.", 404);
+
   const itens = await carrinhoRepository.getCarrinho(clienteId);
   if (!itens || itens.length === 0)
     throw new AppError("Carrinho vazio.", 400);
 
-  // ===================================================================
-  // CALCULAR TOTAL DO PEDIDO
-  // ===================================================================
   let total = 0;
-
   for (const item of itens) {
     const produto = await produtoRepository.getProduto(item.id_produto);
     if (!produto)
@@ -49,16 +48,10 @@ async function criarPedido(clienteId) {
     total += Number(produto.preco) * Number(item.quantidade);
   }
 
-  // ===================================================================
-  // TRANSAÇÃO
-  // ===================================================================
   return await db.transaction(async (trx) => {
-    
-    // Criar pedido COM valor_total correto
-    const pedido = await pedidoRepository.criarPedido(clienteId, total, trx);
+    const pedido = await pedidoRepository.criarPedido(clienteId, total, enderecoId, trx); 
     const pedidoId = pedido.id_pedido;
 
-    // Adicionar itens ao pedido + diminuir estoque
     for (const item of itens) {
       const produto = await produtoRepository.getProduto(item.id_produto, trx);
 
@@ -77,7 +70,6 @@ async function criarPedido(clienteId) {
       );
     }
 
-    // Limpar carrinho
     await carrinhoRepository.limparCarrinho(clienteId, trx);
 
     return {
@@ -144,6 +136,48 @@ async function cancelarPedidoAdmin(pedidoId) {
   return await pedidoRepository.atualizarStatus(pedidoId, "cancelado");
 }
 
+
+// Atualiza um item no pedido e ajusta o estoque
+async function atualizarItemPedido(pedidoId, produtoId, quantidade) {
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
+
+  const itemPedido = await pedidoRepository.getItensPedido(pedidoId);
+  if (!itemPedido) throw new AppError("Item de pedido não encontrado.", 404);
+
+  const produto = await produtoRepository.getProduto(produtoId);
+  if (!produto) throw new AppError("Produto não encontrado.", 404);
+
+  // Ajustar o estoque
+  const estoqueAtual = itemPedido.quantidade;
+  const novaQuantidade = quantidade;
+  
+  if (novaQuantidade > estoqueAtual) {
+    await produtoRepository.diminuirEstoque(produtoId, novaQuantidade - estoqueAtual);
+  } else {
+    await produtoRepository.aumentarEstoque(produtoId, estoqueAtual - novaQuantidade);
+  }
+
+  return await pedidoRepository.atualizarItemPedido(pedidoId, produtoId, quantidade);
+}
+
+// Deleta um pedido e restaura o estoque dos produtos
+async function deletarPedido(pedidoId) {
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
+
+  const itens = await pedidoRepository.getItensPedido(pedidoId);
+
+  // Restaurar o estoque dos produtos
+  for (const item of itens) {
+    await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade);
+  }
+
+  await pedidoRepository.deletarPedido(pedidoId);
+
+  return { mensagem: "Pedido deletado com sucesso." };
+}
+
 export default {
   getAllPedidos,
   getPedido,
@@ -151,5 +185,7 @@ export default {
   criarPedido,
   atualizarStatus,
   cancelarPedidoCliente,
-  cancelarPedidoAdmin
+  cancelarPedidoAdmin,
+  atualizarItemPedido,
+  deletarPedido
 };

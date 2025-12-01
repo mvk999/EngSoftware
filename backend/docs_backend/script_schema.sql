@@ -1,6 +1,6 @@
 /* ============================================================
-    BANCO DE DADOS — Vought Tech
-    Schema atualizado e compatível com o backend atual
+   BANCO DE DADOS — Vought Tech
+   Schema atualizado com tabela de endereços
 ============================================================ */
 
 /* ------------------------------------------------------------
@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS produtos (
     descricao    TEXT,
     preco        DECIMAL(10,2) NOT NULL,
     estoque      INT NOT NULL CHECK (estoque >= 0),
+    imagem       VARCHAR(255),
 
     CONSTRAINT fk_produto_categoria
         FOREIGN KEY (id_categoria)
@@ -70,10 +71,15 @@ CREATE TABLE IF NOT EXISTS pedidos (
     status       VARCHAR(20) NOT NULL CHECK (status IN
                     ('pendente','processando','enviado','entregue','cancelado')),
     valor_total  DECIMAL(10,2) NOT NULL DEFAULT 0,
+    endereco_id  INT,  -- Relaciona o endereço do pedido
 
     CONSTRAINT fk_pedido_cliente
         FOREIGN KEY (id_cliente)
-        REFERENCES usuarios(id_usuario)
+        REFERENCES usuarios(id_usuario),
+
+    CONSTRAINT fk_pedido_endereco
+        FOREIGN KEY (endereco_id)
+        REFERENCES enderecos(id_endereco) -- Fazendo o relacionamento com a tabela de endereços
 );
 
 /* ------------------------------------------------------------
@@ -107,9 +113,6 @@ CREATE TABLE IF NOT EXISTS auth_failures (
 
 /* ------------------------------------------------------------
    8) TABELA: tokens_reset
-   — Alinhada com o backend atualizado
-   — token_hash é usado pelo Node
-   — id_usuario precisa ser UNIQUE para ON CONFLICT funcionar
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS tokens_reset (
     id_token       SERIAL PRIMARY KEY,
@@ -125,7 +128,26 @@ CREATE TABLE IF NOT EXISTS tokens_reset (
 );
 
 /* ------------------------------------------------------------
-   9) ÍNDICES
+   9) TABELA: enderecos
+------------------------------------------------------------ */
+CREATE TABLE IF NOT EXISTS enderecos (
+    id_endereco SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    rua VARCHAR(120) NOT NULL,
+    numero VARCHAR(20) NOT NULL,
+    bairro VARCHAR(80) NOT NULL,
+    cidade VARCHAR(80) NOT NULL,
+    estado VARCHAR(2) NOT NULL,
+    cep VARCHAR(9) NOT NULL,
+
+    CONSTRAINT fk_endereco_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios(id_usuario)
+        ON DELETE CASCADE
+);
+
+/* ------------------------------------------------------------
+   10) ÍNDICES
 ------------------------------------------------------------ */
 CREATE INDEX IF NOT EXISTS idx_produtos_nome
     ON produtos (nome);
@@ -135,3 +157,6 @@ CREATE INDEX IF NOT EXISTS idx_pedidos_cliente
 
 CREATE INDEX IF NOT EXISTS idx_carrinho_cliente
     ON carrinho (id_cliente);
+
+CREATE INDEX IF NOT EXISTS idx_endereco_usuario
+    ON enderecos (id_usuario);

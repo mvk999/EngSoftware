@@ -1,4 +1,3 @@
-// app.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -18,6 +17,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+//  Servir imagens
+app.use("docs_backend/uploads", express.static("uploads"));
+
 async function startServer() {
     try {
         await db.initDB();
@@ -28,7 +30,7 @@ async function startServer() {
         // Swagger
         swaggerDocs(app);
 
-        // Tratamento global de erros (último middleware)
+        // Tratamento global de erros
         app.use(errorHandler);
 
         // Start

@@ -19,7 +19,8 @@
     { "name": "Categoria", "description": "CRUD de categorias (RF002–RF005)" },
     { "name": "Produto", "description": "Consulta e administração de produtos (RF011–RF016)" },
     { "name": "Carrinho", "description": "Gerenciamento do carrinho (RF012)" },
-    { "name": "Pedido", "description": "Histórico, criação e processamento de pedidos (RF006–RF009)" }
+    { "name": "Pedido", "description": "Histórico, criação e processamento de pedidos (RF006–RF009)" },
+    { "name": "Endereco", "description": "Gerenciamento de endereços do usuário" }
   ],
 
   "components": {
@@ -163,7 +164,44 @@
         },
         "description": "RBR-110: quantidade >= 1. RBR-111: item único no carrinho."
       },
+      "Endereco": {
+        "type": "object",
+        "properties": {
+          "id_endereco": { "type": "integer" },
+          "id_usuario": { "type": "integer" },
+          "rua": { "type": "string" },
+          "numero": { "type": "string" },
+          "bairro": { "type": "string" },
+          "cidade": { "type": "string" },
+          "estado": { "type": "string" },
+          "cep": { "type": "string" }
+        }
+      },
+      "EnderecoCreateRequest": {
+  "type": "object",
+  "required": ["rua", "numero", "bairro", "cidade", "estado", "cep"],
+  "properties": {
+    "rua": { "type": "string" },
+    "numero": { "type": "string" },
+    "bairro": { "type": "string" },
+    "cidade": { "type": "string" },
+    "estado": { "type": "string" },
+    "cep": { "type": "string" }
+  }
+},
 
+"EnderecoUpdateRequest": {
+  "type": "object",
+  "required": ["rua", "numero", "bairro", "cidade", "estado", "cep"],
+  "properties": {
+    "rua": { "type": "string" },
+    "numero": { "type": "string" },
+    "bairro": { "type": "string" },
+    "cidade": { "type": "string" },
+    "estado": { "type": "string" },
+    "cep": { "type": "string" }
+  }
+},
       "Carrinho": {
         "type": "object",
         "properties": {
@@ -462,21 +500,34 @@
             }
           },
           "400": { "$ref": "#/components/responses/BadRequest" }
-        }
-      },
+        },
 
       "post": {
         "tags": ["Produto"],
         "summary": "Cria um novo produto (ADMIN) — RF015",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Produto" }
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": { "type": "string" },
+                "descricao": { "type": "string" },
+                "preco": { "type": "number", "format": "float" },
+                "estoque": { "type": "integer" },
+                "idCategoria": { "type": "integer" },
+                "imagem": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "required": ["nome", "preco", "estoque", "idCategoria"]
             }
           }
-        },
+        }
+      },
         "responses": {
           "201": { "description": "Produto criado" },
           "400": { "$ref": "#/components/responses/BadRequest" },
@@ -485,7 +536,7 @@
       }
     },
 
-    "/produto/{id}": {
+        "/produto/{id}": {
       "put": {
         "tags": ["Produto"],
         "summary": "Atualiza produto existente (ADMIN) — RF014",
@@ -494,13 +545,26 @@
           { "$ref": "#/components/parameters/id" }
         ],
         "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Produto" }
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "nome": { "type": "string" },
+                "descricao": { "type": "string" },
+                "preco": { "type": "number", "format": "float" },
+                "estoque": { "type": "integer" },
+                "idCategoria": { "type": "integer" },
+                "imagem": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
             }
           }
-        },
+        }
+      },
+
         "responses": {
           "200": { "description": "Produto atualizado" },
           "400": { "$ref": "#/components/responses/BadRequest" },
@@ -657,17 +721,32 @@
       }
     },
 
-    "/pedido": {
-      "post": {
-        "tags": ["Pedido"],
-        "summary": "Cria pedido baseado no carrinho do usuário autenticado (RF006)",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "201": { "description": "Pedido criado com sucesso" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "401": { "$ref": "#/components/responses/Unauthorized" }
+  "/pedido": {
+  "post": {
+    "tags": ["Pedido"],
+    "summary": "Cria pedido baseado no carrinho do usuário autenticado (RF006)",
+    "security": [{ "bearerAuth": [] }],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "endereco_id": { "type": "integer" }  
+            },
+            "required": ["endereco_id"] 
+          }
         }
       },
+      "responses": {
+        "201": { "description": "Pedido criado com sucesso" },
+        "400": { "$ref": "#/components/responses/BadRequest" },
+        "401": { "$ref": "#/components/responses/Unauthorized" }
+      }
+    }
+  },
+
 
       "get": {
         "tags": ["Pedido"],
@@ -727,11 +806,9 @@
         }
       }
     },
-
-    "/pedido/{id}/status": {
   "put": {
     "tags": ["Pedido"],
-    "summary": "Atualiza status do pedido (ADMIN) — RF008",
+    "summary": "Atualiza pedido (status, itens e estoque) — RF008",
     "security": [{ "bearerAuth": [] }],
     "parameters": [
       { "$ref": "#/components/parameters/id" }
@@ -742,7 +819,6 @@
         "application/json": {
           "schema": {
             "type": "object",
-            "required": ["status"],
             "properties": {
               "status": {
                 "type": "string",
@@ -752,17 +828,42 @@
                   "enviado",
                   "entregue",
                   "cancelado"
-                ],
-                "description": "RBR-071: alteradoPor e data são registrados automaticamente."
+                ]
+              },
+              "itens": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "idProduto": { "type": "integer" },
+                    "quantidade": { "type": "integer" }
+                  }
+                }
               }
-            }
+            },
+            "required": ["status", "itens"]
           }
         }
       }
     },
     "responses": {
       "200": {
-        "description": "Status atualizado",
+        "description": "Pedido atualizado com sucesso",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Pedido" }
+          }
+        }
+      },
+      "400": { "$ref": "#/components/responses/BadRequest" },
+      "404": { "$ref": "#/components/responses/NotFound" },
+      "403": { "$ref": "#/components/responses/Forbidden" }
+    }
+  }
+},
+    "responses": {
+      "201": {
+        "description": "Pedido atualizado",
         "content": {
           "application/json": {
             "schema": { "$ref": "#/components/schemas/Pedido" },
@@ -793,6 +894,105 @@
 
         }
       }
+
+    "/endereco":{
+  "get": {
+    "tags": ["Endereco"],
+    "summary": "Lista todos os endereços do usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "responses": {
+      "200": {
+        "description": "Lista carregada",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Endereco" }
+            }
+          }
+        }
+      },
+      "401": { "$ref": "#/components/responses/Unauthorized" }
     }
+  },
+
+  "post": {
+    "tags": ["Endereco"],
+    "summary": "Cria um novo endereço para o usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/EnderecoCreateRequest" }
+        }
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "Endereço criado com sucesso",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Endereco" }
+          }
+        }
+      },
+      "400": { "$ref": "#/components/responses/BadRequest" }
+    }
+  }
+},
+
+"/endereco/{id}": {
+  "get": {
+    "tags": ["Endereco"],
+    "summary": "Obtém um endereço específico do usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "parameters": [
+      { "$ref": "#/components/parameters/id" }
+    ],
+    "responses": {
+      "200": {
+        "description": "Endereço encontrado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Endereco" }
+          }
+        }
+      },
+      "404": { "$ref": "#/components/responses/NotFound" }
+    }
+  },
+
+  "put": {
+    "tags": ["Endereco"],
+    "summary": "Atualiza um endereço do usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "parameters": [
+      { "$ref": "#/components/parameters/id" }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/EnderecoUpdateRequest" }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Endereço atualizado com sucesso",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Endereco" }
+          }
+        }
+      },
+      "400": { "$ref": "#/components/responses/BadRequest" },
+      "404": { "$ref": "#/components/responses/NotFound" }
+    }
+  }
+}
+
+
   }
 }

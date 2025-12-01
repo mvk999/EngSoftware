@@ -4,11 +4,20 @@ import categoriaRepository from "../repositories/categoriaRepository.js";
 import { AppError } from "../utils/error.js";
 
 async function getProdutos(filtros) {
-  // você já tem um getProdutos no repository que usa esses filtros
   return await produtoRepository.getProdutos(filtros);
 }
 
-async function createProduto(nome, preco, categoriaId, descricao, estoque) {
+/**
+ * Criar produto + imagem
+ */
+async function createProduto(
+  nome,
+  preco,
+  categoriaId,
+  descricao,
+  estoque,
+  imagem
+) {
   if (!nome || nome.trim().length < 2)
     throw new AppError("Nome deve conter ao menos 2 caracteres.", 400);
 
@@ -21,7 +30,6 @@ async function createProduto(nome, preco, categoriaId, descricao, estoque) {
   if (!categoriaId)
     throw new AppError("categoriaId é obrigatório.", 400);
 
-  // Garante número (se vier string do body)
   const categoriaIdNum = Number(categoriaId);
 
   const categoria = await categoriaRepository.getCategoria(categoriaIdNum);
@@ -40,16 +48,29 @@ async function createProduto(nome, preco, categoriaId, descricao, estoque) {
       400
     );
 
+  // Agora com imagem
   return await produtoRepository.createProduto(
     nomeTratado,
     preco,
     categoriaIdNum,
     descricao?.trim() || "",
-    estoque
+    estoque,
+    imagem
   );
 }
 
-async function updateProduto(id, nome, preco, categoriaId, descricao, estoque) {
+/**
+ * Atualizar produto + imagem opcional
+ */
+async function updateProduto(
+  id,
+  nome,
+  preco,
+  categoriaId,
+  descricao,
+  estoque,
+  imagem
+) {
   const produto = await produtoRepository.getProduto(id);
   if (!produto) throw new AppError("Produto não encontrado.", 404);
 
@@ -95,7 +116,8 @@ async function updateProduto(id, nome, preco, categoriaId, descricao, estoque) {
     preco,
     categoriaIdFinal,
     descricao?.trim(),
-    estoque
+    estoque,
+    imagem
   );
 }
 

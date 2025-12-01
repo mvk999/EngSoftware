@@ -1,12 +1,5 @@
-// repositories/pedidoRepository.js
 import BD from "./bd.js";
-
-/**
- * Repositório do módulo Pedidos.
- * Tabelas:
- *  - pedidos(id_pedido, id_cliente, status, data_criacao, valor_total)
- *  - itens_pedido(id_pedido, id_produto, quantidade, preco_unitario)
- */
+import produtoRepository from "./produtoRepository.js";
 
 async function getAllPedidos(trx = null) {
   const client = trx || (await BD.conectar());
@@ -54,19 +47,15 @@ async function getPedidosByCliente(clienteId, trx = null) {
   }
 }
 
-/**
- * AGORA correto:
- * criarPedido(clienteId, valorTotal, trx)
- */
-async function criarPedido(clienteId, valorTotal, trx = null) {
+async function criarPedido(clienteId, valorTotal, enderecoId, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
-    INSERT INTO pedidos (id_cliente, status, valor_total)
-    VALUES ($1, 'pendente', $2)
+    INSERT INTO pedidos (id_cliente, status, valor_total, endereco_id)
+    VALUES ($1, 'pendente', $2, $3)
     RETURNING *;
   `;
   try {
-    const q = await client.query(sql, [clienteId, valorTotal]);
+    const q = await client.query(sql, [clienteId, valorTotal, enderecoId]);
     return q.rows[0];
   } finally {
     if (!trx) client.release();
@@ -87,6 +76,23 @@ async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnita
       quantidade,
       precoUnitario
     ]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+// Atualizar item de pedido e ajustando o estoque
+async function atualizarItemPedido(pedidoId, produtoId, quantidade, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE itens_pedido
+    SET quantidade = $1
+    WHERE id_pedido = $2 AND id_produto = $3
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [quantidade, pedidoId, produtoId]);
     return q.rows[0];
   } finally {
     if (!trx) client.release();
@@ -124,6 +130,28 @@ async function atualizarStatus(idPedido, novoStatus, trx = null) {
   }
 }
 
+// Deletar pedido e restaurar estoque
+async function deletarPedido(idPedido, trx = null) {
+  const client = trx || (await BD.conectar());
+  
+  const itens = await getItensPedido(idPedido, trx);
+  
+  // Restaurar estoque
+  for (let item of itens) {
+    await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
+  }
+
+  const sql = `
+    DELETE FROM pedidos WHERE id_pedido = $1 RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [idPedido]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
 async function transaction(cb) {
   return BD.transaction(cb);
 }
@@ -134,7 +162,9 @@ export default {
   getPedidosByCliente,
   criarPedido,
   adicionarItemNoPedido,
+  atualizarItemPedido,
   getItensPedido,
   atualizarStatus,
+  deletarPedido,
   transaction
 };
