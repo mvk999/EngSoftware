@@ -1,0 +1,151 @@
+body {
+  overflow-x: hidden;
+}
+
+/* Tela completa */
+.login-container {
+  position: relative;
+  width: 1920px;
+  background: #191922;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: row;
+}
+
+/* Lado esquerdo */
+.login-left {
+  left: -20px;
+  top: 0;
+  width: 55%;    /* Diminuído */
+  height: 100vh;
+  background: #15141B;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Card principal */
+.login-card {
+  position: absolute;
+  width: 480px;
+  height: auto;    /* <-- deixa o card crescer conforme o conteúdo */
+  min-height: 600px;
+  left: 260px;
+  top: 130px;      /* <-- sobe um pouco o card */
+
+  background: #D9D9D9;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.25);
+  border-radius: 18px;
+
+  padding: 50px 50px 70px 50px;  /* <-- mais espaço */
+  box-sizing: border-box;
+  form{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+/* Voltar */
+.voltar {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  font-size: 26px; /* menor */
+  cursor: pointer;
+}
+
+/* Textos */
+.bemvindo {
+  margin-top: 40px;
+  font-family: Poppins;
+  font-weight: 400;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.titulo {
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 42px; /* menor */
+  margin: 0;
+  margin-top: -5px;
+}
+
+/* Labels */
+.label {
+  font-family: Poppins;
+  font-size: 14px;
+  font-weight: 300;
+  margin-top: 15px;
+  display: block;
+  align-self: flex-start;
+}
+
+/* Inputs */
+.login-card input {
+  width: 100%;
+  height: 38px;  /* menor */
+  background: #fff;
+  border-radius: 4px;
+  border: none;
+  margin-top: 4px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-family: Poppins;
+  color: #717680;
+}
+
+/* Esqueceu senha */
+.esqueceu {
+  font-family: Poppins;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-top: 3px;
+  text-decoration: none;
+  color: #000;
+}
+
+/* Botão */
+.btn-login {
+  width: 130px;  /* menor */
+  height: 40px;  /* menor */
+  margin-top: 30px;
+  background: #FFC831;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-family: Poppins;
+  font-weight: 600;
+  font-size: 15px;
+  color: #15141B;
+}
+
+/* Texto inferior "já tem conta?" */
+.cadastro {
+  position: relative;
+  bottom: -25px; /* <-- empurra pra baixo */
+  left: 0;
+  text-align: center;
+  width: 100%;
+}
+.cadastro span {
+  cursor: pointer;
+  color: #000;
+  text-decoration: underline;
+}
+
+/* Logo direita */
+.login-logo {
+
+  width: 520px;   /* menor */
+  height: 520px;  /* menor */
+  object-fit: contain;
+}
+.login-right{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40%;
+}

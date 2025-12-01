@@ -156,7 +156,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                               }}
                               title="Editar"
                               onClick={() =>
-                                onEditarPedido && onEditarPedido(row)
+                                onEditarPedido && onEditarPedido(row.id)
                               }
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.opacity = '0.7')
