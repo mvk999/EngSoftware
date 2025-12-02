@@ -16,24 +16,24 @@ const router = express.Router();
 
 // Ver pedidos do próprio cliente
 router.get(
-    "/me",
-    authMiddleware,
-    errorBoundary(pedidoController.getPedidosByCliente)
+  "/me",
+  authMiddleware,
+  errorBoundary(pedidoController.getPedidosByCliente)
 );
 
 // Criar pedido a partir do próprio carrinho
 router.post(
-    "/",
-    authMiddleware,
-    errorBoundary(pedidoController.criarPedido)
+  "/",
+  authMiddleware,
+  errorBoundary(pedidoController.criarPedido)
 );
 
 // Cancelar pedido do próprio cliente
 router.delete(
-    "/me/:id",
-    authMiddleware,
-    validateId("id"),
-    errorBoundary(pedidoController.cancelarPedidoCliente)
+  "/me/:id",
+  authMiddleware,
+  validateId("id"),
+  errorBoundary(pedidoController.cancelarPedidoCliente)
 );
 
 /**
@@ -42,36 +42,48 @@ router.delete(
  * ================================
  */
 
+// Listar todos os pedidos
 router.get(
-    "/",
-    authMiddleware,
-    adminMiddleware,
-    errorBoundary(pedidoController.getAllPedidos)
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  errorBoundary(pedidoController.getAllPedidos)
 );
 
+// Obter detalhes de um pedido
 router.get(
-    "/:id",
-    authMiddleware,
-    adminMiddleware,
-    validateId("id"),
-    errorBoundary(pedidoController.getPedido)
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(pedidoController.getPedido)
 );
 
+// Atualizar pedido (status, itens e estoque)
 router.put(
-    "/:id/status",
-    authMiddleware,
-    adminMiddleware,
-    validateId("id"),
-    errorBoundary(pedidoController.atualizarStatus)
+  "/:id", // A rota continua com PUT /pedido/:id
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(pedidoController.atualizarPedido) // Aqui vamos processar o status, os itens e o estoque
 );
 
 // Cancelar pedido — ADMIN
 router.delete(
-    "/:id",
-    authMiddleware,
-    adminMiddleware,
-    validateId("id"),
-    errorBoundary(pedidoController.cancelarPedidoAdmin)
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(pedidoController.cancelarPedidoAdmin)
+);
+
+// Deletar pedido
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(pedidoController.deletarPedido)
 );
 
 export default router;

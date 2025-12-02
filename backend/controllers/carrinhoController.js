@@ -5,10 +5,9 @@ import { AppError } from "../utils/error.js";
 async function getCarrinho(req, res) {
   try {
     const clienteId = req.user.id;
+    const carrinho = await carrinhoServices.getCarrinho(clienteId);
 
-    const resultado = await carrinhoServices.getCarrinho(clienteId);
-
-    return res.status(200).json(resultado);
+    return res.status(200).json(carrinho); // já tem itens + valorTotal
   } catch (err) {
     console.error("carrinhoController.getCarrinho:", err);
 
@@ -18,6 +17,7 @@ async function getCarrinho(req, res) {
     return res.status(500).json({ message: "Erro ao buscar carrinho." });
   }
 }
+
 
 async function adicionarItem(req, res) {
   try {
