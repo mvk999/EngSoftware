@@ -10,7 +10,17 @@ import { AppError } from "../utils/error.js";
 // Listar todos pedidos (Admin)
 // =========================
 async function getAllPedidos() {
-  return await pedidoRepository.getAllPedidos();
+  const pedidos = await pedidoRepository.getAllPedidos();
+  // Enriquecer cada pedido com informações de cliente e endereço (para uso no admin)
+  const pedidosEnriquecidos = await Promise.all(
+    pedidos.map(async (p) => {
+      const cliente = await clienteRepository.getCliente(p.id_cliente);
+      const endereco = await enderecoRepository.getEndereco(p.endereco_id);
+      return { ...p, cliente, endereco };
+    })
+  );
+
+  return pedidosEnriquecidos;
 }
 
 // =========================
@@ -23,7 +33,10 @@ async function getPedido(id) {
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   const itens = await pedidoRepository.getItensPedido(id);
-  return { ...pedido, itens };
+  // Enriquecer com cliente e endereço
+  const cliente = await clienteRepository.getCliente(pedido.id_cliente);
+  const endereco = await enderecoRepository.getEndereco(pedido.endereco_id);
+  return { ...pedido, itens, cliente, endereco };
 }
 
 // =========================

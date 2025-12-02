@@ -24,10 +24,10 @@ async function getCarrinho(clienteId) {
     }
 
     resultado.push({
-      idProduto: produto.id_produto,
+      idProduto: produto.id,
       nome: produto.nome,
       quantidade: item.quantidade,
-      preco: Number(produto.preco),
+      preco: produto.preco,
       estoque: produto.estoque
     });
 

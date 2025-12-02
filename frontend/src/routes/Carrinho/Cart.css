@@ -18,7 +18,6 @@
 
 .cart-container{
   width: 1133px; /* match requested width */
-  height: 744px; /* match requested height */
   background: transparent;
   display: flex;
   gap: 24px;
