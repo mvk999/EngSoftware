@@ -10,7 +10,7 @@ import Casinha from "../../assets/Casinha.svg"
 import Avatar from "../../assets/Avatar.svg"
 import Lupa from "../../assets/Lupa.svg"
 import NavBarAdmin from "../Tela_Admin/NavBarAdmin";
-import { getUserType } from "../../utils/auth";
+
 
 import "./Dashboard.css";
 
@@ -22,14 +22,6 @@ function Dashboard() {
   const [erro, setErro] = useState("");
   const [autenticado, setAutenticado] = useState(isAuthenticated());
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-    useEffect(() => {
-    if (isAuthenticated()) {
-        const tipo = getUserType();
-        setIsAdmin(tipo === "ADMIN");
-    }
-    }, []);
 
   useEffect(() => {
   const carregarProdutos = async () => {
@@ -44,7 +36,8 @@ function Dashboard() {
         descricao: p.descricao,
         preco: Number(p.preco),          // converter preco
         estoque: p.estoque,
-        categoriaNome: p.categoria_nome
+        categoriaNome: p.categoria_nome,
+        imagemUrl: p.imagem ? `${API_BASE_URL}/uploads/${p.imagem}` : null
       }));
 
       setProdutos(produtosCorrigidos);
@@ -112,38 +105,8 @@ const handleAdicionarCarrinho = async (produtoId) => {
 
   return (
     <div className="dashboard">
-      {/* Sidebar fixa à esquerda */}
-      <aside className="dashboard__sidebar">
-        <img src={Logo}></img>
-        <nav className="sidebar__menu">
-            {/* Início */}
-            <button className="sidebar__item sidebar__item--active">
-            <img src={Casinha} />
-            Início
-            </button>
-
-        {/* Botões adicionais para ADMIN */}
-        {isAdmin && (
-        <>
-            <button
-            className="sidebar__item"
-            onClick={() => navigate("/pedidos")}
-            >
-            <img src={Casinha} />
-            Pedidos
-            </button>
-
-            <button
-            className="sidebar__item"
-            onClick={() => navigate("/produtos")}
-            >
-            <img src={Casinha} />
-            Produtos
-            </button>
-        </>
-        )}
-    </nav>
-    </aside>
+        {/* Sidebar substituída por NavBarAdmin (barra lateral do admin) */}
+        <NavBarAdmin />
 
 
       {/* Conteúdo principal */}
@@ -192,14 +155,10 @@ const handleAdicionarCarrinho = async (produtoId) => {
                 <article key={produto.id} className="product-card">
                   <div className="product-card__image-wrapper">
                     {produto.imagemUrl ? (
-                      <img
-                        src={produto.imagemUrl}
-                        alt={produto.nome}
-                        className="product-card__image"
-                      />
+                      <img className="product-card__image" src={produto.imagemUrl} alt={produto.nome} />
                     ) : (
                       <div className="product-card__image product-card__image--placeholder">
-                        {produto.nome?.[0] || "?"}
+                        {(produto.nome && produto.nome[0]) || "?"}
                       </div>
                     )}
                   </div>
@@ -207,8 +166,9 @@ const handleAdicionarCarrinho = async (produtoId) => {
                   <div className="product-card__body">
                     <h3 className="product-card__title">{produto.nome}</h3>
                     <p className="product-card__subtitle">
-                      {produto.descricao}
+                      {produto.descricao}  
                     </p>
+                    Estoque: {produto.estoque}
 
                     <div className="product-card__footer">
                       <span className="product-card__price">

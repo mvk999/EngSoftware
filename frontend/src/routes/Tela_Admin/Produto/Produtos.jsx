@@ -146,7 +146,21 @@ function Produtos() {
       if (modoModal === 'editar') {
         // PUT /produto/{id}
         const id = form.id;
-        await axios.put(`${API_BASE_URL}/produto/${id}`, payload, config);
+
+        // Se há um arquivo de imagem (File), envie como FormData
+        if (form.imagem instanceof File) {
+          const fd = new FormData();
+          fd.append('nome', payload.nome);
+          fd.append('descricao', payload.descricao || '');
+          fd.append('preco', String(payload.preco));
+          fd.append('estoque', String(payload.estoque));
+          fd.append('idCategoria', String(payload.idCategoria));
+          fd.append('imagem', form.imagem);
+
+          await axios.put(`${API_BASE_URL}/produto/${id}`, fd, config);
+        } else {
+          await axios.put(`${API_BASE_URL}/produto/${id}`, payload, config);
+        }
 
         // Atualiza lista local sem perder o restante dos dados
         setProdutos((prev) =>
@@ -157,7 +171,21 @@ function Produtos() {
         alert("Produto atualizado com sucesso.");
       } else {
         // POST /produto
-        const resp = await axios.post(`${API_BASE_URL}/produto`, payload, config);
+        let resp;
+        if (form.imagem instanceof File) {
+          const fd = new FormData();
+          fd.append('nome', payload.nome);
+          fd.append('descricao', payload.descricao || '');
+          fd.append('preco', String(payload.preco));
+          fd.append('estoque', String(payload.estoque));
+          fd.append('idCategoria', String(payload.idCategoria));
+          fd.append('imagem', form.imagem);
+
+          resp = await axios.post(`${API_BASE_URL}/produto`, fd, config);
+        } else {
+          resp = await axios.post(`${API_BASE_URL}/produto`, payload, config);
+        }
+
         // Backend deve devolver o produto criado com id
         const novoProduto = resp.data;
 

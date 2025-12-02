@@ -18,6 +18,8 @@ function ProdutoModal({
     preco: "",
     estoque: "",
   });
+  const [imagemFile, setImagemFile] = useState(null);
+  const [imagemPreview, setImagemPreview] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,6 +31,9 @@ function ProdutoModal({
         preco: produto?.preco ?? "",
         estoque: produto?.estoque ?? "",
       });
+      // se o produto já tem imagem (nome de arquivo), limpa preview — backend pode fornecer URL se necessário
+      setImagemFile(null);
+      setImagemPreview(produto?.imagem ? `/uploads/${produto.imagem}` : null);
     } else {
       resetForm();
     }
@@ -41,6 +46,17 @@ function ProdutoModal({
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    setImagemFile(file || null);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setImagemPreview(url);
+    } else {
+      setImagemPreview(null);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       id: "",
@@ -50,6 +66,8 @@ function ProdutoModal({
       preco: "",
       estoque: "",
     });
+    setImagemFile(null);
+    setImagemPreview(null);
   };
 
   const handleConfirm = () => {
@@ -70,6 +88,9 @@ function ProdutoModal({
     if (modo === "editar") {
       payload.id = formData.id;
     }
+
+    // Se foi selecionado um arquivo, anexa como campo `imagem` (File) para que o caller possa montar FormData
+    if (imagemFile) payload.imagem = imagemFile;
 
     onConfirm(payload);
   };
@@ -198,6 +219,24 @@ function ProdutoModal({
               value={formData.estoque}
               onChange={handleChange("estoque")}
             />
+          </div>
+
+          <div className="prod-input-field">
+            <label className="prod-input-label">Imagem (opcional)</label>
+            <input
+              id="prod-input-imagem"
+              data-testid="prod-input-imagem"
+              type="file"
+              className="prod-input"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+
+            {imagemPreview ? (
+              <div className="prod-imagem-preview">
+                <img src={imagemPreview} alt="preview" />
+              </div>
+            ) : null}
           </div>
         </div>
 

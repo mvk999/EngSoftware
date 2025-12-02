@@ -173,6 +173,18 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.prod-imagem-preview {
+  margin-top: 8px;
+}
+
+.prod-imagem-preview img {
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
 .prod-input::placeholder {
   color: #717680;
 }
