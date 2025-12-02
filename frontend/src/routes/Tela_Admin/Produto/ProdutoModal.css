@@ -1,5 +1,5 @@
 /* Modal Overlay */
-.modal-overlay {
+.prod-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -19,7 +19,7 @@
 }
 
 /* Modal Container */
-.modal-content {
+.prod-modal-content {
   position: relative;
   width: 387px;
   max-height: 90vh;
@@ -46,7 +46,7 @@
 }
 
 /* Modal Header */
-.modal-header {
+.prod-modal-header {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -55,7 +55,7 @@
 }
 
 /* Featured Icon */
-.modal-icon {
+.prod-modal-icon {
   box-sizing: border-box;
   width: 48px;
   height: 48px;
@@ -76,7 +76,7 @@
 }
 
 /* Text Wrapper */
-.modal-text-wrapper {
+.prod-modal-text {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -85,7 +85,7 @@
 }
 
 /* Title */
-.modal-title {
+.prod-modal-title {
   width: 100%;
   font-style: normal;
   font-weight: 400;
@@ -96,7 +96,7 @@
 }
 
 /* Close Button */
-.modal-close-btn {
+.prod-modal-close-btn {
   position: absolute;
   width: 44px;
   height: 44px;
@@ -113,17 +113,17 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.modal-close-btn:hover {
+.prod-modal-close-btn:hover {
   background-color: rgba(196, 205, 213, 0.1);
   transform: rotate(90deg);
 }
 
-.modal-close-btn:active {
+.prod-modal-close-btn:active {
   transform: rotate(90deg) scale(0.95);
 }
 
 /* Input Section - AGORA EM FLUXO NORMAL */
-.modal-input-section {
+.prod-modal-inputs {
   margin-top: 16px;
   display: flex;
   flex-direction: column;
@@ -135,7 +135,7 @@
 }
 
 /* Input Field */
-.input-field {
+.prod-input-field {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -144,7 +144,7 @@
 }
 
 /* Input Label */
-.input-label {
+.prod-input-label {
   font-style: normal;
   font-weight: 500;
   font-size: 14px;
@@ -153,7 +153,7 @@
 }
 
 /* Input Box (input e textarea usam a mesma classe) */
-.input-box {
+.prod-input {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
@@ -173,11 +173,11 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.input-box::placeholder {
+.prod-input::placeholder {
   color: #717680;
 }
 
-.input-box:focus {
+.prod-input:focus {
   outline: none;
   border-color: #FFC831;
   box-shadow:
@@ -186,13 +186,13 @@
 }
 
 /* Permite textarea sem quebrar o layout */
-textarea.input-box {
+textarea.prod-input {
   align-items: flex-start;
   resize: vertical;
 }
 
 /* Modal Actions - EMBAIXO, SEM ABSOLUTE */
-.modal-actions {
+.prod-modal-actions {
   margin-top: 24px;
   display: flex;
   flex-direction: column;
@@ -201,7 +201,7 @@ textarea.input-box {
 }
 
 /* Confirm Button */
-.btn-confirm {
+.prod-btn-confirm {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
@@ -224,21 +224,21 @@ textarea.input-box {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-confirm:hover {
+.prod-btn-confirm:hover {
   background: #FFD85C;
   border-color: #FFD85C;
   transform: translateY(-2px);
   box-shadow: 0px 4px 8px rgba(10, 13, 18, 0.1);
 }
 
-.btn-confirm:active {
+.prod-btn-confirm:active {
   background: #FFB81A;
   border-color: #FFB81A;
   transform: translateY(0);
 }
 
 /* Cancel Button */
-.btn-cancel {
+.prod-btn-cancel {
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
@@ -261,14 +261,14 @@ textarea.input-box {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-cancel:hover {
+.prod-btn-cancel:hover {
   background: #25242d;
   border-color: #E0E5EB;
   transform: translateY(-2px);
   box-shadow: 0px 4px 8px rgba(10, 13, 18, 0.1);
 }
 
-.btn-cancel:active {
+.prod-btn-cancel:active {
   background: #191922;
   border-color: #C4CDD5;
   transform: translateY(0);
@@ -276,7 +276,7 @@ textarea.input-box {
 
 /* Responsive */
 @media (max-width: 480px) {
-  .modal-content {
+  .prod-modal-content {
     width: 90vw;
     max-width: 387px;
   }

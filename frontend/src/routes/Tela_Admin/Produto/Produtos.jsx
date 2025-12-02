@@ -209,7 +209,7 @@ function Produtos() {
   if (!autorizado) {
     // Não mostra nada da tela pra quem não é ADMIN
     return (
-      <div className="Container" style={{ color: '#fff', padding: 20 }}>
+      <div className="prod-container" style={{ color: '#fff', padding: 20 }}>
         Acesso restrito. Apenas administradores podem visualizar esta página.
       </div>
     );
@@ -217,14 +217,14 @@ function Produtos() {
 
   if (loading) {
     return (
-      <div className="Container" style={{ color: '#fff', padding: 20 }}>
+      <div className="prod-container" style={{ color: '#fff', padding: 20 }}>
         Carregando...
       </div>
     );
   }
 
   return (
-    <div className="Container">
+    <div className="prod-container">
       {/* Modal de criar/editar produto */}
       <ProdutoModal
         isOpen={showModal}
@@ -239,10 +239,10 @@ function Produtos() {
       <NavBarAdmin />
 
       {/* Mantendo as classes originais para não quebrar o CSS */}
-      <div className="ContentCategorias">
-        <div className="TopContentCategorias">
+      <div className="prod-content-categorias">
+        <div className="prod-top-content-categorias">
           <img src="/src/assets/Avatar.svg" alt="Avatar" />
-          <button className="ButtonAdmin">Admin</button>
+          <button className="prod-button-admin" data-testid="prod-btn-admin">Admin</button>
           <img src="/src/assets/ShopCart.svg" alt="Shop Cart" />
         </div>
 
@@ -255,7 +255,8 @@ function Produtos() {
 
         {/* Botão para abrir modal de cadastro */}
         <button
-          className="ButtonAdmin"
+          className="prod-button-admin"
+          data-testid="prod-btn-open-cadastrar"
           onClick={handleAbrirModalCadastrar}
           style={{ marginTop: '20px' }}
         >
