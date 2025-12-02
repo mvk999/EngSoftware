@@ -1,5 +1,5 @@
 // controllers/enderecoController.js
-import enderecoService from "../services/enderecoService.js";
+import enderecoService from "../services/enderecoServices.js";
 import { AppError } from "../utils/error.js";
 
 async function criarEndereco(req, res) {

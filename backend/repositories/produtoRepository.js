@@ -52,6 +52,37 @@ async function getProduto(id, trx = null) {
   }
 }
 
+async function getProdutos(trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM produtos
+    ORDER BY id_produto;
+  `;
+  try {
+    const q = await client.query(sql);
+    return q.rows;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+async function getProdutosByCategoria(categoriaId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    SELECT *
+    FROM produtos
+    WHERE id_categoria = $1
+    ORDER BY id_produto;
+  `;
+  try {
+    const q = await client.query(sql, [categoriaId]);
+    return q.rows;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
 async function getProdutoByNomeECategoria(nome, categoriaId, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
@@ -103,7 +134,6 @@ async function updateProduto(
   trx = null
 ) {
   const client = trx || (await BD.conectar());
-
   const sql = `
     UPDATE produtos
     SET nome = COALESCE($1, nome),
@@ -115,7 +145,6 @@ async function updateProduto(
     WHERE id_produto = $7
     RETURNING *;
   `;
-
   const params = [
     nome ?? null,
     preco ?? null,
@@ -125,7 +154,6 @@ async function updateProduto(
     imagem ?? null,
     id
   ];
-
   try {
     const q = await client.query(sql, params);
     return q.rows[0] || null;
@@ -151,6 +179,8 @@ async function deleteProduto(id, trx = null) {
 
 export default {
   getProduto,
+  getProdutos,
+  getProdutosByCategoria,
   getProdutoByNomeECategoria,
   createProduto,
   updateProduto,

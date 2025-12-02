@@ -3,8 +3,8 @@ import produtoRepository from "../repositories/produtoRepository.js";
 import categoriaRepository from "../repositories/categoriaRepository.js";
 import { AppError } from "../utils/error.js";
 
-async function getProdutos(filtros) {
-  return await produtoRepository.getProdutos(filtros);
+async function getProdutos() {
+  return await produtoRepository.getProdutos();
 }
 
 /**
@@ -48,7 +48,6 @@ async function createProduto(
       400
     );
 
-  // Agora com imagem
   return await produtoRepository.createProduto(
     nomeTratado,
     preco,

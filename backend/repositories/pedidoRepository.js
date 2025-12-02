@@ -1,13 +1,12 @@
 import BD from "./bd.js";
 import produtoRepository from "./produtoRepository.js";
 
+// =========================
+// Listar todos os pedidos
+// =========================
 async function getAllPedidos(trx = null) {
   const client = trx || (await BD.conectar());
-  const sql = `
-    SELECT *
-    FROM pedidos
-    ORDER BY id_pedido DESC;
-  `;
+  const sql = `SELECT * FROM pedidos ORDER BY id_pedido DESC;`;
   try {
     const q = await client.query(sql);
     return q.rows;
@@ -16,13 +15,12 @@ async function getAllPedidos(trx = null) {
   }
 }
 
+// =========================
+// Pedido por ID
+// =========================
 async function getPedido(id, trx = null) {
   const client = trx || (await BD.conectar());
-  const sql = `
-    SELECT *
-    FROM pedidos
-    WHERE id_pedido = $1;
-  `;
+  const sql = `SELECT * FROM pedidos WHERE id_pedido = $1;`;
   try {
     const q = await client.query(sql, [id]);
     return q.rows[0] || null;
@@ -31,11 +29,13 @@ async function getPedido(id, trx = null) {
   }
 }
 
+// =========================
+// Pedidos de um cliente
+// =========================
 async function getPedidosByCliente(clienteId, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
-    SELECT *
-    FROM pedidos
+    SELECT * FROM pedidos
     WHERE id_cliente = $1
     ORDER BY id_pedido DESC;
   `;
@@ -47,6 +47,9 @@ async function getPedidosByCliente(clienteId, trx = null) {
   }
 }
 
+// =========================
+// Criar pedido
+// =========================
 async function criarPedido(clienteId, valorTotal, enderecoId, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
@@ -62,6 +65,9 @@ async function criarPedido(clienteId, valorTotal, enderecoId, trx = null) {
   }
 }
 
+// =========================
+// Adicionar item no pedido
+// =========================
 async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnitario, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
@@ -70,19 +76,16 @@ async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnita
     RETURNING *;
   `;
   try {
-    const q = await client.query(sql, [
-      pedidoId,
-      produtoId,
-      quantidade,
-      precoUnitario
-    ]);
+    const q = await client.query(sql, [pedidoId, produtoId, quantidade, precoUnitario]);
     return q.rows[0];
   } finally {
     if (!trx) client.release();
   }
 }
 
-// Atualizar item de pedido e ajustando o estoque
+// =========================
+// Atualizar item do pedido
+// =========================
 async function atualizarItemPedido(pedidoId, produtoId, quantidade, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
@@ -99,13 +102,12 @@ async function atualizarItemPedido(pedidoId, produtoId, quantidade, trx = null) 
   }
 }
 
+// =========================
+// Buscar itens de um pedido
+// =========================
 async function getItensPedido(pedidoId, trx = null) {
   const client = trx || (await BD.conectar());
-  const sql = `
-    SELECT *
-    FROM itens_pedido
-    WHERE id_pedido = $1;
-  `;
+  const sql = `SELECT * FROM itens_pedido WHERE id_pedido = $1;`;
   try {
     const q = await client.query(sql, [pedidoId]);
     return q.rows;
@@ -114,6 +116,9 @@ async function getItensPedido(pedidoId, trx = null) {
   }
 }
 
+// =========================
+// Atualizar status do pedido
+// =========================
 async function atualizarStatus(idPedido, novoStatus, trx = null) {
   const client = trx || (await BD.conectar());
   const sql = `
@@ -130,20 +135,20 @@ async function atualizarStatus(idPedido, novoStatus, trx = null) {
   }
 }
 
-// Deletar pedido e restaurar estoque
+// =========================
+// Deletar pedido (cascata + repor estoque)
+// =========================
 async function deletarPedido(idPedido, trx = null) {
   const client = trx || (await BD.conectar());
-  
+
   const itens = await getItensPedido(idPedido, trx);
-  
+
   // Restaurar estoque
   for (let item of itens) {
     await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
   }
 
-  const sql = `
-    DELETE FROM pedidos WHERE id_pedido = $1 RETURNING *;
-  `;
+  const sql = `DELETE FROM pedidos WHERE id_pedido = $1 RETURNING *;`;
   try {
     const q = await client.query(sql, [idPedido]);
     return q.rows[0];
@@ -152,6 +157,9 @@ async function deletarPedido(idPedido, trx = null) {
   }
 }
 
+// =========================
+// Transações
+// =========================
 async function transaction(cb) {
   return BD.transaction(cb);
 }

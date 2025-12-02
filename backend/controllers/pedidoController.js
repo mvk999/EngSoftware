@@ -57,8 +57,8 @@ async function getPedidosByCliente(req, res) {
 // =========================
 async function criarPedido(req, res) {
   try {
-    const clienteId = req.user.id;  // O ID do cliente vem do token
-    const { enderecoId } = req.body;  // O endereço vem no corpo da requisição
+    const clienteId = req.user && req.user.id;  // vindo do token
+    const enderecoId = req.body.enderecoId ?? req.body.endereco_id;
 
     if (!enderecoId) {
       return res.status(400).json({ message: "Endereço é obrigatório." });
@@ -66,7 +66,15 @@ async function criarPedido(req, res) {
 
     const pedido = await pedidoService.criarPedido(clienteId, enderecoId);
 
-    return res.status(201).json(pedido);
+    // Ajuste: retornar objeto completo com itens e valorTotal
+    return res.status(201).json({
+      idPedido: pedido.id_pedido,
+      clienteId: pedido.id_cliente,
+      status: pedido.status,
+      valorTotal: pedido.valor_total,
+      endereco: pedido.endereco,
+      itens: pedido.itens
+    });
   } catch (err) {
     console.error("pedidoController.criarPedido:", err);
 
@@ -180,7 +188,15 @@ async function atualizarItemPedido(req, res) {
       quantidade
     );
 
-    return res.status(200).json(atualizado);
+    // Ajuste: retornar objeto completo com itens e valorTotal
+    return res.status(200).json({
+      idPedido: atualizado.id_pedido,
+      clienteId: atualizado.id_cliente,
+      status: atualizado.status,
+      valorTotal: atualizado.valor_total,
+      endereco: atualizado.endereco,
+      itens: atualizado.itens
+    });
   } catch (err) {
     console.error("pedidoController.atualizarItemPedido:", err);
 

@@ -13,14 +13,13 @@ async function getCarrinho(clienteId) {
   const itens = await carrinhoRepository.getCarrinho(clienteId);
 
   const resultado = [];
+  let valorTotal = 0;
 
   for (const item of itens) {
     const produto = await produtoRepository.getProduto(item.id_produto);
 
     if (!produto) {
-      await carrinhoRepository
-        .removerItem(clienteId, item.produto_id)
-        .catch(() => {});
+      await carrinhoRepository.removerItem(clienteId, item.id_produto).catch(() => {});
       continue;
     }
 
@@ -31,9 +30,11 @@ async function getCarrinho(clienteId) {
       preco: produto.preco,
       estoque: produto.estoque
     });
+
+    valorTotal += produto.preco * item.quantidade; // soma o total
   }
 
-  return resultado;
+  return { itens: resultado, valorTotal }; // retorna objeto com itens + total
 }
 
 async function adicionarItem(clienteId, produtoId, quantidade) {

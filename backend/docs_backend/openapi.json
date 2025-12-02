@@ -144,16 +144,18 @@
       },
 
       "Produto": {
-        "type": "object",
-        "required": ["nome", "descricao", "preco", "estoque", "idCategoria"],
-        "properties": {
-          "nome": { "type": "string" },
-          "descricao": { "type": "string" },
-          "preco": { "type": "number", "format": "float" },
-          "estoque": { "type": "integer" },
-          "idCategoria": { "type": "integer" }
-        }
-      },
+  "type": "object",
+  "properties": {
+    "id_produto": { "type": "integer" },
+    "nome": { "type": "string" },
+    "descricao": { "type": "string" },
+    "preco": { "type": "number", "format": "float" },
+    "estoque": { "type": "integer" },
+    "id_categoria": { "type": "integer" },
+    "imagem": { "type": "string", "nullable": true }
+  }
+}, 
+
 
       "CarrinhoItem": {
         "type": "object",
@@ -218,29 +220,42 @@
         }
       },
 
-      "Pedido": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "integer" },
-          "data": { "type": "string", "format": "date-time" },
-          "status": { "type": "string" },
-          "valorTotal": { "type": "number", "format": "float" },
-          "historicoStatus": {
-            "type": "array",
-            "description": "RBR-071: cada alteração deve registrar data, hora e ADMIN responsável.",
-            "items": {
-              "type": "object",
-              "properties": {
-                "status": { "type": "string" },
-                "data": { "type": "string", "format": "date-time" },
-                "alteradoPor": { "type": "string" }
-              }
+    "Pedido": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer" },
+        "data": { "type": "string", "format": "date-time" },
+        "status": { "type": "string" },
+        "valorTotal": { "type": "number", "format": "float" },
+        "itens": {
+          "type": "array",
+          "description": "Itens do pedido com quantidade e preço unitário",
+          "items": {
+            "type": "object",
+            "properties": {
+              "idProduto": { "type": "integer" },
+              "quantidade": { "type": "integer" },
+              "precoUnitario": { "type": "number", "format": "float" }
+            }
+          }
+        },
+        "historicoStatus": {
+          "type": "array",
+          "description": "RBR-071: cada alteração deve registrar data, hora e ADMIN responsável.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "string" },
+              "data": { "type": "string", "format": "date-time" },
+              "alteradoPor": { "type": "string" }
             }
           }
         }
       }
     }
+    }
   },
+
 
   "paths": {
     "/auth/login": {
@@ -474,104 +489,138 @@
       }
     },
     "/produto": {
-      "get": {
-        "tags": ["Produto"],
-        "summary": "Lista produtos ou realiza busca (RF011)",
-        "security": [],
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": { "type": "string" },
-            "description": "Termo de busca pelo nome do produto (RBR-101: busca apenas pelo nome)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Lista de produtos encontrados",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Produto" }
-                }
-              }
-            }
-          },
-          "400": { "$ref": "#/components/responses/BadRequest" }
+  "get": {
+    "tags": ["Produto"],
+    "summary": "Lista produtos com filtros e busca (RF011)",
+    "security": [],
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "string" },
+        "description": "Busca pelo nome do produto (RBR-101: corresponde apenas ao nome)"
+      },
+      {
+        "name": "categoria",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer" },
+        "description": "Filtrar por categoria (RF011)"
+      },
+      {
+        "name": "ordenar",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["nome_asc", "nome_desc", "preco_asc", "preco_desc"]
         },
-
-      "post": {
-        "tags": ["Produto"],
-        "summary": "Cria um novo produto (ADMIN) — RF015",
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-        "required": true,
+        "description": "Ordenação opcional (RF011)"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Lista de produtos encontrados",
         "content": {
-          "multipart/form-data": {
+          "application/json": {
             "schema": {
-              "type": "object",
-              "properties": {
-                "nome": { "type": "string" },
-                "descricao": { "type": "string" },
-                "preco": { "type": "number", "format": "float" },
-                "estoque": { "type": "integer" },
-                "idCategoria": { "type": "integer" },
-                "imagem": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              },
-              "required": ["nome", "preco", "estoque", "idCategoria"]
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Produto" }
             }
           }
         }
       },
-        "responses": {
-          "201": { "description": "Produto criado" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "403": { "$ref": "#/components/responses/Forbidden" }
+      "400": { "$ref": "#/components/responses/BadRequest" }
+    }
+  },
+
+
+      "post": {
+  "tags": ["Produto"],
+  "summary": "Cria um novo produto (ADMIN) — RF015",
+  "security": [{ "bearerAuth": [] }],
+  "requestBody": {
+    "required": true,
+    "content": {
+      "multipart/form-data": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "nome": { "type": "string" },
+            "descricao": { "type": "string" },
+            "preco": { "type": "number", "format": "float" },
+            "estoque": { "type": "integer" },
+            "idCategoria": { "type": "integer" },
+            "imagem": {
+              "type": "string",
+              "format": "binary",
+              "description": "Imagem opcional do produto"
+            }
+          },
+          "required": ["nome", "preco", "estoque", "idCategoria"]
+        }
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "description": "Produto criado",
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/Produto" }
         }
       }
     },
+    "400": { "$ref": "#/components/responses/BadRequest" },
+    "403": { "$ref": "#/components/responses/Forbidden" }
+  }
+}},
+
 
         "/produto/{id}": {
       "put": {
-        "tags": ["Produto"],
-        "summary": "Atualiza produto existente (ADMIN) — RF014",
-        "security": [{ "bearerAuth": [] }],
-        "parameters": [
-          { "$ref": "#/components/parameters/id" }
-        ],
-        "requestBody": {
-        "content": {
-          "multipart/form-data": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "nome": { "type": "string" },
-                "descricao": { "type": "string" },
-                "preco": { "type": "number", "format": "float" },
-                "estoque": { "type": "integer" },
-                "idCategoria": { "type": "integer" },
-                "imagem": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
+  "tags": ["Produto"],
+  "summary": "Atualiza produto existente (ADMIN) — RF014",
+  "security": [{ "bearerAuth": [] }],
+  "parameters": [
+    { "$ref": "#/components/parameters/id" }
+  ],
+  "requestBody": {
+    "content": {
+      "multipart/form-data": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "nome": { "type": "string" },
+            "descricao": { "type": "string" },
+            "preco": { "type": "number", "format": "float" },
+            "estoque": { "type": "integer" },
+            "idCategoria": { "type": "integer" },
+            "imagem": {
+              "type": "string",
+              "format": "binary",
+              "description": "Nova imagem opcional"
             }
           }
         }
-      },
-
-        "responses": {
-          "200": { "description": "Produto atualizado" },
-          "400": { "$ref": "#/components/responses/BadRequest" },
-          "404": { "$ref": "#/components/responses/NotFound" },
-          "403": { "$ref": "#/components/responses/Forbidden" }
+      }
+    }
+  },
+  "responses": {
+    "200": {
+      "description": "Produto atualizado",
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/Produto" }
         }
-      },
+      }
+    },
+    "400": { "$ref": "#/components/responses/BadRequest" },
+    "404": { "$ref": "#/components/responses/NotFound" },
+    "403": { "$ref": "#/components/responses/Forbidden" }
+  }
+},
+
 
       "delete": {
         "tags": ["Produto"],
@@ -581,7 +630,23 @@
           { "$ref": "#/components/parameters/id" }
         ],
         "responses": {
-          "200": { "description": "Produto removido" },
+          "200": {
+  "description": "Produto removido",
+  "content": {
+    "application/json": {
+      "schema": {
+        "type": "object",
+        "properties": {
+          "mensagem": { "type": "string" }
+        }
+      },
+      "example": {
+        "mensagem": "Produto excluído com sucesso"
+      }
+    }
+  }
+},
+
           "404": { "$ref": "#/components/responses/NotFound" },
           "403": { "$ref": "#/components/responses/Forbidden" }
         }
@@ -689,16 +754,36 @@
         "security": [{ "bearerAuth": [] }],
         "responses": {
           "200": {
-            "description": "Lista de pedidos do cliente",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Pedido" }
-                }
-              }
+  "description": "Lista de pedidos do cliente",
+  "content": {
+    "application/json": {
+      "schema": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Pedido" }
+      },
+      "example": [
+        {
+          "id": 12,
+          "data": "2025-11-29T12:30:00Z",
+          "status": "pendente",
+          "valorTotal": 499.9,
+          "itens": [
+            { "idProduto": 3, "quantidade": 2, "precoUnitario": 99.9 },
+            { "idProduto": 5, "quantidade": 1, "precoUnitario": 300.1 }
+          ],
+          "historicoStatus": [
+            {
+              "status": "pendente",
+              "data": "2025-11-29T12:30:00Z",
+              "alteradoPor": "Sistema"
             }
-          },
+          ]
+        }
+      ]
+    }
+  }
+},
+
           "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       }
@@ -722,30 +807,56 @@
     },
 
   "/pedido": {
-  "post": {
-    "tags": ["Pedido"],
-    "summary": "Cria pedido baseado no carrinho do usuário autenticado (RF006)",
-    "security": [{ "bearerAuth": [] }],
-    "requestBody": {
-      "required": true,
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "endereco_id": { "type": "integer" }  
-            },
-            "required": ["endereco_id"] 
+      "post": {
+        "tags": ["Pedido"],
+        "summary": "Cria pedido baseado no carrinho do usuário autenticado (RF006)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endereco_id": { "type": "integer" }
+                },
+                "required": ["endereco_id"]
+              }
+            }
           }
+        },
+        "responses": {
+          "201": {
+          "description": "Pedido criado com sucesso",
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Pedido" },
+              "example": {
+                "id": 12,
+                "data": "2025-11-29T12:30:00Z",
+                "status": "pendente",
+                "valorTotal": 499.9,
+                "itens": [
+                  { "idProduto": 3, "quantidade": 2, "precoUnitario": 99.9 },
+                  { "idProduto": 5, "quantidade": 1, "precoUnitario": 300.1 }
+                ],
+                "historicoStatus": [
+                  {
+                    "status": "pendente",
+                    "data": "2025-11-29T12:30:00Z",
+                    "alteradoPor": "Sistema"
+                  }
+                ]
+              }
+            }
+          }
+        },
+
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
         }
       },
-      "responses": {
-        "201": { "description": "Pedido criado com sucesso" },
-        "400": { "$ref": "#/components/responses/BadRequest" },
-        "401": { "$ref": "#/components/responses/Unauthorized" }
-      }
-    }
-  },
+
 
 
       "get": {
@@ -780,17 +891,75 @@
         ],
         "responses": {
           "200": {
-            "description": "Pedido encontrado",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Pedido" }
-              }
-            }
-          },
+  "description": "Pedido encontrado",
+  "content": {
+    "application/json": {
+      "schema": { "$ref": "#/components/schemas/Pedido" },
+      "example": {
+        "id": 12,
+        "data": "2025-11-29T12:30:00Z",
+        "status": "pendente",
+        "valorTotal": 499.9,
+        "itens": [
+          { "idProduto": 3, "quantidade": 2, "precoUnitario": 99.9 },
+          { "idProduto": 5, "quantidade": 1, "precoUnitario": 300.1 }
+        ],
+        "historicoStatus": [
+          {
+            "status": "pendente",
+            "data": "2025-11-29T12:30:00Z",
+            "alteradoPor": "Sistema"
+          }
+        ]
+      }
+    }
+  }
+},
           "404": { "$ref": "#/components/responses/NotFound" },
           "403": { "$ref": "#/components/responses/Forbidden" }
         }
       },
+      "put": {
+    "tags": ["Pedido"],
+    "summary": "Atualiza pedido (status, itens e estoque) — RF008",
+    "security": [{ "bearerAuth": [] }],
+    "parameters": [
+      { "$ref": "#/components/parameters/id" }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["pendente","processando","enviado","entregue","cancelado"]
+              },
+              "itens": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "idProduto": { "type": "integer" },
+                    "quantidade": { "type": "integer" }
+                  }
+                }
+              }
+            },
+            "required": ["status","itens"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": { "description": "Pedido atualizado" },
+      "400": { "$ref": "#/components/responses/BadRequest" },
+      "404": { "$ref": "#/components/responses/NotFound" },
+      "403": { "$ref": "#/components/responses/Forbidden" }
+    }
+  },
 
       "delete": {
         "tags": ["Pedido"],
@@ -845,22 +1014,8 @@
           }
         }
       }
-    },
-    "responses": {
-      "200": {
-        "description": "Pedido atualizado com sucesso",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/Pedido" }
-          }
-        }
-      },
-      "400": { "$ref": "#/components/responses/BadRequest" },
-      "404": { "$ref": "#/components/responses/NotFound" },
-      "403": { "$ref": "#/components/responses/Forbidden" }
     }
-  }
-},
+  },
     "responses": {
       "201": {
         "description": "Pedido atualizado",
@@ -891,10 +1046,7 @@
       "400": { "$ref": "#/components/responses/BadRequest" },
       "404": { "$ref": "#/components/responses/NotFound" },
       "403": { "$ref": "#/components/responses/Forbidden" }
-
-        }
-      }
-
+},
     "/endereco":{
   "get": {
     "tags": ["Endereco"],
@@ -992,7 +1144,5 @@
     }
   }
 }
+    }}
 
-
-  }
-}

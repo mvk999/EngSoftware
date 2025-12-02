@@ -23,9 +23,26 @@ CREATE TABLE IF NOT EXISTS categorias (
     id_categoria SERIAL PRIMARY KEY,
     nome         VARCHAR(50) NOT NULL UNIQUE
 );
-
 /* ------------------------------------------------------------
-   3) TABELA: produtos
+   3) TABELA: enderecos
+------------------------------------------------------------ */
+CREATE TABLE IF NOT EXISTS enderecos (
+    id_endereco SERIAL PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    rua VARCHAR(120) NOT NULL,
+    numero VARCHAR(20) NOT NULL,
+    bairro VARCHAR(80) NOT NULL,
+    cidade VARCHAR(80) NOT NULL,
+    estado VARCHAR(2) NOT NULL,
+    cep VARCHAR(9) NOT NULL,
+
+    CONSTRAINT fk_endereco_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuarios(id_usuario)
+        ON DELETE CASCADE
+);
+/* ------------------------------------------------------------
+   4) TABELA: produtos
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS produtos (
     id_produto   SERIAL PRIMARY KEY,
@@ -43,7 +60,7 @@ CREATE TABLE IF NOT EXISTS produtos (
 );
 
 /* ------------------------------------------------------------
-   4) TABELA: carrinho
+   5) TABELA: carrinho
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS carrinho (
     id_carrinho SERIAL PRIMARY KEY,
@@ -62,7 +79,7 @@ CREATE TABLE IF NOT EXISTS carrinho (
 );
 
 /* ------------------------------------------------------------
-   5) TABELA: pedidos
+   6) TABELA: pedidos
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS pedidos (
     id_pedido    SERIAL PRIMARY KEY,
@@ -83,7 +100,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
 );
 
 /* ------------------------------------------------------------
-   6) TABELA: itens_pedido
+   7) TABELA: itens_pedido
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS itens_pedido (
     id_item        SERIAL PRIMARY KEY,
@@ -103,7 +120,7 @@ CREATE TABLE IF NOT EXISTS itens_pedido (
 );
 
 /* ------------------------------------------------------------
-   7) TABELA: auth_failures
+   8) TABELA: auth_failures
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS auth_failures (
     email         VARCHAR(100) PRIMARY KEY,
@@ -112,7 +129,7 @@ CREATE TABLE IF NOT EXISTS auth_failures (
 );
 
 /* ------------------------------------------------------------
-   8) TABELA: tokens_reset
+   9) TABELA: tokens_reset
 ------------------------------------------------------------ */
 CREATE TABLE IF NOT EXISTS tokens_reset (
     id_token       SERIAL PRIMARY KEY,
@@ -127,24 +144,7 @@ CREATE TABLE IF NOT EXISTS tokens_reset (
         ON DELETE CASCADE
 );
 
-/* ------------------------------------------------------------
-   9) TABELA: enderecos
------------------------------------------------------------- */
-CREATE TABLE IF NOT EXISTS enderecos (
-    id_endereco SERIAL PRIMARY KEY,
-    id_usuario INT NOT NULL,
-    rua VARCHAR(120) NOT NULL,
-    numero VARCHAR(20) NOT NULL,
-    bairro VARCHAR(80) NOT NULL,
-    cidade VARCHAR(80) NOT NULL,
-    estado VARCHAR(2) NOT NULL,
-    cep VARCHAR(9) NOT NULL,
 
-    CONSTRAINT fk_endereco_usuario
-        FOREIGN KEY (id_usuario)
-        REFERENCES usuarios(id_usuario)
-        ON DELETE CASCADE
-);
 
 /* ------------------------------------------------------------
    10) ÍNDICES
