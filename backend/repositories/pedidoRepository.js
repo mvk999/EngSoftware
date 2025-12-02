@@ -156,6 +156,22 @@ async function deletarPedido(idPedido, trx = null) {
     if (!trx) client.release();
   }
 }
+async function atualizarEndereco(pedidoId, enderecoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET endereco_id = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [enderecoId, pedidoId]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
 
 // =========================
 // Transações
@@ -163,6 +179,7 @@ async function deletarPedido(idPedido, trx = null) {
 async function transaction(cb) {
   return BD.transaction(cb);
 }
+
 
 export default {
   getAllPedidos,
@@ -174,5 +191,6 @@ export default {
   getItensPedido,
   atualizarStatus,
   deletarPedido,
+  atualizarEndereco,
   transaction
 };

@@ -12,12 +12,7 @@ const router = express.Router();
  * Todas exigem autenticação (cada usuário só gerencia seu próprio endereço)
  */
 
-// Lista TODOS os endereços do usuário autenticado
-router.get(
-    "/",
-    authMiddleware,
-    errorBoundary(enderecoController.listarEnderecos)
-);
+
 
 // Busca endereço específico
 router.get(
@@ -34,12 +29,5 @@ router.post(
     errorBoundary(enderecoController.criarEndereco)
 );
 
-// Atualizar endereço
-router.put(
-    "/:id",
-    authMiddleware,
-    validateId("id"),
-    errorBoundary(enderecoController.atualizarEndereco)
-);
 
 export default router;

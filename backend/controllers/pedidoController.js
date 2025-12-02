@@ -226,6 +226,28 @@ async function deletarPedido(req, res) {
     return res.status(500).json({ message: "Erro ao deletar pedido." });
   }
 }
+async function atualizarPedido(req, res) {
+  try {
+    const { id } = req.params;
+    const { status, enderecoId } = req.body;
+
+    const atualizado = await pedidoService.atualizarPedido(id, {
+      status,
+      enderecoId
+    });
+
+    return res.status(200).json(atualizado);
+
+  } catch (err) {
+    console.error("pedidoController.atualizarPedido:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao atualizar pedido." });
+  }
+}
+
 
 export default {
   getAllPedidos,
@@ -236,5 +258,6 @@ export default {
   cancelarPedidoCliente,
   cancelarPedidoAdmin,
   atualizarItemPedido,
-  deletarPedido
+  deletarPedido,
+  atualizarPedido
 };

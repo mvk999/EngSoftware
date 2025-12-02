@@ -48,7 +48,18 @@ async function createCliente(nome, email, cpf, senha) {
 
   return novoCliente;
 }
+async function getClienteById(id) {
+  if (!id) throw new AppError("ID inválido.", 400);
+
+  const cliente = await clienteRepository.getCliente(id);
+  if (!cliente) throw new AppError("Cliente não encontrado.", 404);
+
+  return cliente;
+}
+
 
 export default {
-  createCliente
+  createCliente,
+  getClienteById
 };
+

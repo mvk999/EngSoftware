@@ -194,6 +194,39 @@ async function deletarPedido(pedidoId) {
   await pedidoRepository.deletarPedido(pedidoId);
   return { mensagem: "Pedido deletado com sucesso." };
 }
+async function atualizarPedido(pedidoId, { status, enderecoId }) {
+  const pedido = await pedidoRepository.getPedido(pedidoId);
+  if (!pedido) throw new AppError("Pedido não encontrado.", 404);
+
+  return await db.transaction(async (trx) => {
+
+    // --------------------------
+    // Atualizar endereço
+    // --------------------------
+    if (enderecoId) {
+      const endereco = await enderecoRepository.getEndereco(enderecoId);
+      if (!endereco) throw new AppError("Endereço não encontrado.", 404);
+
+      await pedidoRepository.atualizarEndereco(pedidoId, enderecoId, trx);
+    }
+
+    // --------------------------
+    // Atualizar status
+    // --------------------------
+    if (status) {
+      const validos = ["pendente", "processando", "enviado", "entregue", "cancelado"];
+      if (!validos.includes(status))
+        throw new AppError("Status inválido.", 400);
+
+      await pedidoRepository.atualizarStatus(pedidoId, status, trx);
+    }
+
+    const pedidoAtualizado = await pedidoRepository.getPedido(pedidoId, trx);
+    const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
+
+    return { ...pedidoAtualizado, itens };
+  });
+}
 
 export default {
   getAllPedidos,
@@ -204,5 +237,6 @@ export default {
   cancelarPedidoCliente,
   cancelarPedidoAdmin,
   atualizarItemPedido,
-  deletarPedido
+  deletarPedido,
+  atualizarPedido
 };

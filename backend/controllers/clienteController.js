@@ -61,5 +61,38 @@ async function createCliente(req, res) {
       .json({ code: 500, message: "Erro ao criar cliente" });
   }
 }
+async function getClienteById(req, res) {
+  try {
+    const { id } = req.params;
 
-export default { createCliente };
+    const cliente = await clienteServices.getClienteById(id);
+
+    return res.status(200).json({
+      id: cliente.id_usuario,
+      nome: cliente.nome,
+      email: cliente.email,
+      cpf: cliente.cpf,
+      tipo: cliente.tipo
+    });
+  } catch (err) {
+    console.error("clienteController.getClienteById:", err);
+
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({
+        code: err.statusCode,
+        message: err.message,
+      });
+    }
+
+    return res
+      .status(500)
+      .json({ code: 500, message: "Erro ao buscar cliente." });
+  }
+}
+
+
+export default { 
+  createCliente,
+  getClienteById
+};
+
