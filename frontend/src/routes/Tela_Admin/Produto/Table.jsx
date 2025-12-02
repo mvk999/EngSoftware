@@ -108,16 +108,17 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
             <TableBody>
               {currentRows.map((row, index) => (
                 <TableRow
-                  key={row.id || index}
-                  sx={{
-                    backgroundColor: '#191922',
-                    borderBottom:
-                      index < currentRows.length - 1
-                        ? '1px solid #2a2f3f'
-                        : 'none',
-                    '&:hover': { backgroundColor: '#1f2430' },
-                  }}
-                >
+                    key={row.id || index}
+                    data-testid={row.id ? `prod-row-${row.id}` : undefined}
+                    sx={{
+                      backgroundColor: '#191922',
+                      borderBottom:
+                        index < currentRows.length - 1
+                          ? '1px solid #2a2f3f'
+                          : 'none',
+                      '&:hover': { backgroundColor: '#1f2430' },
+                    }}
+                  >
                   {columns.map((column) => {
                     const value = row[column.id];
 
@@ -165,6 +166,7 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
                                 transition: 'opacity 0.2s',
                               }}
                               title="Editar"
+                              data-testid={row.id ? `prod-edit-${row.id}` : undefined}
                               onClick={() =>
                                 onEditarProduto && onEditarProduto(row)
                               }
@@ -185,6 +187,7 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
                                 transition: 'opacity 0.2s',
                               }}
                               title="Deletar"
+                              data-testid={row.id ? `prod-delete-${row.id}` : undefined}
                               onClick={() =>
                                 onDeleteProduto && onDeleteProduto(row.id)
                               }

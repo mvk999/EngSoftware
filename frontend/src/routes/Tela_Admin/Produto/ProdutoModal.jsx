@@ -82,22 +82,23 @@ function ProdutoModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleCancel}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="prod-modal-overlay" data-testid="prod-modal-overlay" onClick={handleCancel}>
+      <div className="prod-modal-content" data-testid="prod-modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header">
-          <div className="modal-icon">
+        <div className="prod-modal-header">
+          <div className="prod-modal-icon">
             <EditIcon style={{ color: "#FFC831" }} />
           </div>
 
-          <div className="modal-text-wrapper">
-            <h1 className="modal-title">
+          <div className="prod-modal-text">
+            <h1 className="prod-modal-title">
               {modo === "editar" ? "Editar Produto" : "Cadastrar Produto"}
             </h1>
           </div>
 
           <button
-            className="modal-close-btn"
+            className="prod-modal-close-btn"
+            data-testid="prod-btn-close"
             onClick={handleCancel}
             type="button"
           >
@@ -113,25 +114,29 @@ function ProdutoModal({
         </div>
 
         {/* Campos */}
-        <div className="modal-input-section">
+        <div className="prod-modal-inputs">
 
           {/* ID só é exibido no editar */}
           {modo === "editar" ? (
-            <div className="input-field">
-              <label className="input-label">ID</label>
+            <div className="prod-input-field">
+              <label className="prod-input-label">ID</label>
               <input
+                id="prod-id"
+                data-testid="prod-input-id"
                 type="text"
-                className="input-box"
+                className="prod-input"
                 value={formData.id}
                 disabled
               />
             </div>
           ) : null}
 
-          <div className="input-field">
-            <label className="input-label">Categoria</label>
+          <div className="prod-input-field">
+            <label className="prod-input-label">Categoria</label>
             <select
-              className="input-box"
+              id="prod-select-categoria"
+              data-testid="prod-select-categoria"
+              className="prod-input"
               value={String(formData.idCategoria)}
               onChange={handleChange("idCategoria")}
             >
@@ -147,52 +152,60 @@ function ProdutoModal({
             </select>
           </div>
 
-          <div className="input-field">
-            <label className="input-label">Nome</label>
+          <div className="prod-input-field">
+            <label className="prod-input-label">Nome</label>
             <input
+              id="prod-input-nome"
+              data-testid="prod-input-nome"
               type="text"
-              className="input-box"
+              className="prod-input"
               value={formData.nome}
               onChange={handleChange("nome")}
             />
           </div>
 
-          <div className="input-field">
-            <label className="input-label">Descrição</label>
+          <div className="prod-input-field">
+            <label className="prod-input-label">Descrição</label>
             <textarea
-              className="input-box"
+              id="prod-input-descricao"
+              data-testid="prod-input-descricao"
+              className="prod-input"
               rows={3}
               value={formData.descricao}
               onChange={handleChange("descricao")}
             />
           </div>
 
-          <div className="input-field">
-            <label className="input-label">Preço</label>
+          <div className="prod-input-field">
+            <label className="prod-input-label">Preço</label>
             <input
+              id="prod-input-preco"
+              data-testid="prod-input-preco"
               type="number"
-              className="input-box"
+              className="prod-input"
               value={formData.preco}
               onChange={handleChange("preco")}
             />
           </div>
 
-          <div className="input-field">
-            <label className="input-label">Estoque</label>
+          <div className="prod-input-field">
+            <label className="prod-input-label">Estoque</label>
             <input
+              id="prod-input-estoque"
+              data-testid="prod-input-estoque"
               type="number"
-              className="input-box"
+              className="prod-input"
               value={formData.estoque}
               onChange={handleChange("estoque")}
             />
           </div>
         </div>
 
-        <div className="modal-actions">
-          <button className="btn-confirm" onClick={handleConfirm}>
+        <div className="prod-modal-actions">
+          <button className="prod-btn-confirm" data-testid="prod-btn-confirm" onClick={handleConfirm}>
             {modo === "editar" ? "Salvar" : "Cadastrar"}
           </button>
-          <button className="btn-cancel" onClick={handleCancel}>
+          <button className="prod-btn-cancel" data-testid="prod-btn-cancel" onClick={handleCancel}>
             Cancelar
           </button>
         </div>

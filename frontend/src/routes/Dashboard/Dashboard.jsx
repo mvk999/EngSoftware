@@ -31,23 +31,34 @@ function Dashboard() {
     }
     }, []);
 
-  // Carrega produtos para a vitrine (rota pública)
   useEffect(() => {
-    const carregarProdutos = async () => {
-      try {
-        setLoading(true);
-        const resp = await axios.get(`${API_BASE_URL}/produto`);
-        setProdutos(resp.data || []);
-      } catch (err) {
-        console.error("Erro ao carregar produtos:", err);
-        setErro("Erro ao carregar produtos.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const carregarProdutos = async () => {
+    try {
+      setLoading(true);
+      const resp = await axios.get(`${API_BASE_URL}/produto`);
 
-    carregarProdutos();
-  }, []);
+      const produtosCorrigidos = resp.data.map((p) => ({
+        id: p.id_produto,                // ID certo
+        idCategoria: p.id_categoria,     // categoria certa
+        nome: p.nome,
+        descricao: p.descricao,
+        preco: Number(p.preco),          // converter preco
+        estoque: p.estoque,
+        categoriaNome: p.categoria_nome
+      }));
+
+      setProdutos(produtosCorrigidos);
+    } catch (err) {
+      console.error("Erro ao carregar produtos:", err);
+      setErro("Erro ao carregar produtos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  carregarProdutos();
+}, []);
+
 
   const handleLoginLogout = () => {
     if (autenticado) {
@@ -58,35 +69,46 @@ function Dashboard() {
       navigate("/login");
     }
   };
+const handleAdicionarCarrinho = async (produtoId) => {
+  if (!isAuthenticated()) {
+    alert("Faça login para adicionar produtos ao carrinho.");
+    navigate("/login");
+    return;
+  }
 
-  const handleAdicionarCarrinho = async (produtoId) => {
-    if (!isAuthenticated()) {
-      alert("Faça login para adicionar produtos ao carrinho.");
-      navigate("/login");
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Token inválido. Faça login novamente.");
+    navigate("/login");
+    return;
+  }
 
-    try {
-      const token = localStorage.getItem("token");
-      const config = token
-        ? { headers: { Authorization: `Bearer ${token}` } }
-        : {};
-
-      // Ajuste o endpoint abaixo conforme o JSON da sua API
-      const payload = {
-        idProduto: produtoId,
-        quantidade: 1,
-      };
-
-      await axios.post(`${API_BASE_URL}/carrinho`, payload, config);
-      alert("Produto adicionado ao carrinho.");
-    } catch (err) {
-      console.error("Erro ao adicionar ao carrinho:", err);
-      const msg =
-        err.response?.data?.erro || "Erro ao adicionar produto ao carrinho.";
-      alert(msg);
-    }
+  const config = {
+    headers: { Authorization: `Bearer ${token}` },
   };
+
+  // Corrigido: usaremos o nome correto esperado pela API
+  const payload = {
+    idProduto: produtoId,  // Agora a chave é `idProduto`
+    quantidade: 1
+  };
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/carrinho`, payload, config);
+    console.log(response);
+    alert("Produto adicionado ao carrinho.");
+  } catch (err) {
+    console.error("Erro ao adicionar ao carrinho:", err);
+    if (err.response) {
+      alert(err.response.data.message || "Erro ao adicionar produto ao carrinho.");
+    } else {
+      alert("Erro desconhecido ao adicionar ao carrinho.");
+    }
+  }
+};
+
+
+
 
   return (
     <div className="dashboard">

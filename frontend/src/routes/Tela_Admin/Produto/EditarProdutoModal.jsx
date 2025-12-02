@@ -34,11 +34,11 @@ function EditarProdutoModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleCancel}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="prod-modal-overlay" data-testid="prod-edit-modal-overlay" onClick={handleCancel}>
+      <div className="prod-modal-content" data-testid="prod-edit-modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="modal-header">
-          <div className="modal-icon">
+        <div className="prod-modal-header">
+          <div className="prod-modal-icon">
             <EditIcon style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -46,10 +46,10 @@ function EditarProdutoModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) 
                 color: '#FFC831',
             }}/>
           </div>
-          <div className="modal-text-wrapper">
-            <h1 className="modal-title">Editar Produtos</h1>
+          <div className="prod-modal-text">
+            <h1 className="prod-modal-title">Editar Produtos</h1>
           </div>
-          <button className="modal-close-btn" onClick={handleCancel} type="button">
+          <button className="prod-modal-close-btn" data-testid="prod-edit-btn-close" onClick={handleCancel} type="button">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M18 6L6 18M6 6l12 12" stroke="#C4CDD5" strokeWidth="2" strokeLinecap="round"/>
             </svg>
@@ -57,12 +57,14 @@ function EditarProdutoModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) 
         </div>
 
         {/* Input Section */}
-        <div className="modal-input-section">
-          <div className="input-field">
-            <label className="input-label">Nome</label>
+        <div className="prod-modal-inputs">
+          <div className="prod-input-field">
+            <label className="prod-input-label">Nome</label>
             <input
+              id="prod-edit-input-nome"
+              data-testid="prod-edit-input-nome"
               type="text"
-              className="input-box"
+              className="prod-input"
               placeholder="Nome da Categoria"
               value={nome}
               onChange={(e) => setNome(e.target.value)}
@@ -73,11 +75,11 @@ function EditarProdutoModal({ isOpen, onClose, onConfirm, categoriaNome = '' }) 
         </div>
 
         {/* Actions */}
-        <div className="modal-actions">
-          <button className="btn-confirm" onClick={handleConfirm} type="button">
+        <div className="prod-modal-actions">
+          <button className="prod-btn-confirm" data-testid="prod-edit-btn-confirm" onClick={handleConfirm} type="button">
             Confirmar
           </button>
-          <button className="btn-cancel" onClick={handleCancel} type="button">
+          <button className="prod-btn-cancel" data-testid="prod-edit-btn-cancel" onClick={handleCancel} type="button">
             Cancelar
           </button>
         </div>
