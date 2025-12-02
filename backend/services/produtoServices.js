@@ -7,11 +7,6 @@ async function getProdutos() {
   return await produtoRepository.getProdutos();
 }
 
-async function getProduto(id) {
-  const pid = Number(id)
-  if (!Number.isFinite(pid) || pid <= 0) return null
-  return await produtoRepository.getProduto(pid)
-}
 
 /**
  * Criar produto + imagem
