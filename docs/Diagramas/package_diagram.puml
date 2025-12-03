@@ -1,12 +1,12 @@
-@startuml
-title Diagrama de Pacotes - EngSoftware (Frontend + Backend)
+@startuml  
+title Diagrama de Pacotes - VoughtTech
 
 skinparam packageStyle rectangle
 skinparam shadowing false
 scale max 1920x1080
-' ===========================
-' BACKEND (estilo com.br...)
-' ===========================
+
+' BACKEND
+
     package "EngSoftaware" {
       package "backend" as PBackend {
 
@@ -82,9 +82,8 @@ scale max 1920x1080
       }
     }
 
-' ===========================
 ' FRONTEND (Cliente)
-' ===========================
+
 package "Frontend (Cliente)" as FFrontend {
   package "React SPA" as FReact {
     class App
@@ -103,9 +102,9 @@ package "Frontend (Cliente)" as FFrontend {
   }
 }
 
-' ===========================
+
 ' DEPENDÊNCIAS (setas tracejadas)
-' ===========================
+
 FFrontend ..> PBackend : <<HTTP JSON>>\nconsome API
 
 PController ..> PService : <<usa>>

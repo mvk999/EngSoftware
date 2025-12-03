@@ -1,10 +1,9 @@
-@startuml
-title Class Diagram - EngSoftware
+@startuml  
+title Diagrama de Classes - Vought Tech
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 
-' Entities generated from docs_backend/script_schema.sql and repositories
 
 class Usuario {
   +id_usuario: integer

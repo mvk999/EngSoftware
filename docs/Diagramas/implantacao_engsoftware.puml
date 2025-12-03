@@ -1,5 +1,5 @@
-@startuml
-title Diagrama de Implantação – Vought Tech (E-commerce)
+@startuml   
+title Diagrama de Implantação – Vought Tech
 
 skinparam rectangle {
   BorderColor #333
