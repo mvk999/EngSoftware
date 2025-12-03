@@ -171,6 +171,22 @@ async function atualizarEndereco(pedidoId, enderecoId, trx = null) {
     if (!trx) client.release();
   }
 }
+async function atualizarCliente(pedidoId, clienteId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET id_cliente = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [clienteId, pedidoId]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
 
 
 // =========================
@@ -192,5 +208,6 @@ export default {
   atualizarStatus,
   deletarPedido,
   atualizarEndereco,
+  atualizarCliente,
   transaction
 };

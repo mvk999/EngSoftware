@@ -953,7 +953,7 @@
       },
       "put": {
   "tags": ["Pedido"],
-  "summary": "Atualiza status e endereço do pedido (ADMIN)",
+  "summary": "Atualiza pedido (status, endereço e cliente) — ADMIN",
   "security": [{ "bearerAuth": [] }],
   "parameters": [
     { "$ref": "#/components/parameters/id" }
@@ -967,14 +967,19 @@
           "properties": {
             "status": {
               "type": "string",
-              "enum": ["pendente","processando","enviado","entregue","cancelado"]
+              "enum": ["pendente", "processando", "enviado", "entregue", "cancelado"],
+              "description": "Novo status do pedido"
             },
             "enderecoId": {
               "type": "integer",
               "description": "Novo endereço associado ao pedido"
+            },
+            "clienteId": {
+              "type": "integer",
+              "description": "Novo cliente para o pedido (somente permitido se status não for enviado/entregue)"
             }
           },
-          "required": ["status", "enderecoId"]
+          "required": []
         }
       }
     }

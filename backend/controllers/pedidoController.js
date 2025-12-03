@@ -229,11 +229,12 @@ async function deletarPedido(req, res) {
 async function atualizarPedido(req, res) {
   try {
     const { id } = req.params;
-    const { status, enderecoId } = req.body;
+    const { status, enderecoId, clienteId } = req.body;
 
     const atualizado = await pedidoService.atualizarPedido(id, {
       status,
-      enderecoId
+      enderecoId,
+      clienteId
     });
 
     return res.status(200).json(atualizado);
@@ -247,6 +248,7 @@ async function atualizarPedido(req, res) {
     return res.status(500).json({ message: "Erro ao atualizar pedido." });
   }
 }
+
 
 
 export default {

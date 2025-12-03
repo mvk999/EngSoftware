@@ -154,10 +154,24 @@ async function cancelarPedidoCliente(pedidoId, clienteId) {
 async function cancelarPedidoAdmin(pedidoId) {
   const pedido = await pedidoRepository.getPedido(pedidoId);
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
-  if (pedido.status === "cancelado") throw new AppError("Pedido já cancelado.", 400);
 
-  return await pedidoRepository.atualizarStatus(pedidoId, "cancelado");
+  if (["cancelado", "entregue"].includes(pedido.status)) {
+    throw new AppError("Não é possível cancelar este pedido.", 400);
+  }
+
+  return await db.transaction(async (trx) => {
+    const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
+
+    // devolve estoque
+    for (const item of itens) {
+      await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
+    }
+
+    // atualiza status
+    return await pedidoRepository.atualizarStatus(pedidoId, "cancelado", trx);
+  });
 }
+
 
 // =========================
 // Atualizar item de pedido
@@ -207,15 +221,36 @@ async function deletarPedido(pedidoId) {
   await pedidoRepository.deletarPedido(pedidoId);
   return { mensagem: "Pedido deletado com sucesso." };
 }
-async function atualizarPedido(pedidoId, { status, enderecoId }) {
+async function atualizarPedido(pedidoId, { status, enderecoId, clienteId }) {
   const pedido = await pedidoRepository.getPedido(pedidoId);
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   return await db.transaction(async (trx) => {
 
-    // --------------------------
-    // Atualizar endereço
-    // --------------------------
+    // ================================
+    // 1) Validar se pode trocar cliente
+    // ================================
+    if (clienteId) {
+
+      // status que NÃO permitem mudança de cliente
+      const bloqueados = ["enviado", "entregue"];
+
+      if (bloqueados.includes(pedido.status)) {
+        throw new AppError(
+          `Não é possível alterar o cliente de um pedido com status '${pedido.status}'.`,
+          400
+        );
+      }
+
+      const cliente = await clienteRepository.getCliente(clienteId);
+      if (!cliente) throw new AppError("Cliente não encontrado.", 404);
+
+      await pedidoRepository.atualizarCliente(pedidoId, clienteId, trx);
+    }
+
+    // ================================
+    // 2) Atualizar endereço (se enviado)
+    // ================================
     if (enderecoId) {
       const endereco = await enderecoRepository.getEndereco(enderecoId);
       if (!endereco) throw new AppError("Endereço não encontrado.", 404);
@@ -223,23 +258,29 @@ async function atualizarPedido(pedidoId, { status, enderecoId }) {
       await pedidoRepository.atualizarEndereco(pedidoId, enderecoId, trx);
     }
 
-    // --------------------------
-    // Atualizar status
-    // --------------------------
+    // ================================
+    // 3) Atualizar status
+    // ================================
     if (status) {
       const validos = ["pendente", "processando", "enviado", "entregue", "cancelado"];
-      if (!validos.includes(status))
+      if (!validos.includes(status)) {
         throw new AppError("Status inválido.", 400);
+      }
 
       await pedidoRepository.atualizarStatus(pedidoId, status, trx);
     }
 
+    // ================================
+    // 4) Retornar pedido atualizado
+    // ================================
     const pedidoAtualizado = await pedidoRepository.getPedido(pedidoId, trx);
     const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
 
     return { ...pedidoAtualizado, itens };
   });
 }
+
+
 
 export default {
   getAllPedidos,
