@@ -7,20 +7,26 @@ public class ProdutoPage {
 
 	private WebDriver driver;
 
-	// === Locators (placeholders por enquanto) ===
+	// === Locators da página ===
 	private By botaoAbrirModal = By.id("prod-button-admin");
-	private By selectCategoria = By.xpath("prod-select-categoria");  // AJUSTAR depois
-	private By inputNome = By.xpath("prod-input-nome"); // AJUSTAR
-	private By inputDescricao = By.xpath("prod-input-descricao"); // AJUSTAR
-	private By inputPreco = By.xpath("prod-input-preco"); // AJUSTAR
-	private By inputEstoque = By.xpath("prod-input-estoque"); // AJUSTAR
-	private By botaoCadastrar = By.xpath("prod-btn-confirm");
-	private By botaoOkPopup = By.xpath("//button[contains(text(),'OK')]"); // AJUSTAR
+
+	private By selectCategoria = By.id("prod-select-categoria");
+	private By inputNome = By.id("prod-input-nome");
+	private By inputDescricao = By.id("prod-input-descricao");
+	private By inputPreco = By.id("prod-input-preco");
+	private By inputEstoque = By.id("prod-input-estoque");
+
+	private By botaoCadastrar = By.id("prod-btn-confirm");
+
+	// Popup de sucesso
+	private By popupSucesso = By.xpath("//div[contains(text(),'Produto cadastrado com sucesso.')]");
+	private By botaoOkPopup = By.xpath("//button[contains(text(),'OK')]");
 
 	public ProdutoPage(WebDriver driver) {
 		this.driver = driver;
 	}
 
+	// Acessa diretamente a página
 	public void abrirPaginaProduto(String url) {
 		driver.get(url);
 	}
@@ -31,11 +37,11 @@ public class ProdutoPage {
 
 	public void preencherFormularioProduto(String categoria, String nome, String descr, String preco, String estoque) {
 
-		// Selecionar categoria
+		// Seleciona categoria
 		driver.findElement(selectCategoria).click();
-		// ... selecionar opção (vamos ajustar depois)
+		driver.findElement(By.xpath("//option[contains(text(),'" + categoria + "')]")).click();
 
-		// Preencher campos
+		// Preenche campos
 		driver.findElement(inputNome).sendKeys(nome);
 		driver.findElement(inputDescricao).sendKeys(descr);
 		driver.findElement(inputPreco).sendKeys(preco);
