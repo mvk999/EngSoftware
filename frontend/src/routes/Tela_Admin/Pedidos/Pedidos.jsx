@@ -72,12 +72,29 @@ function Pedidos() {
       try {
         if (modo === 'editar') {
           const id = pedido.id || pedido.idPedido || pedido.id_pedido;
-          const payload = {
-            status: pedido.status,
-            itens: (pedido.itens || []).map(i => ({ idProduto: i.idProduto || i.id_produto, quantidade: i.quantidade }))
+          // Build payload to update only usuario and endereco for the pedido
+          const userIdCandidate = usuario?.idUsuario ?? usuario?.id ?? pedido?.clienteId ?? pedido?.idCliente ?? pedido?.id_cliente ?? pedido?.cliente?.idUsuario;
+          const enderecoIdCandidate = endereco?.idEndereco ?? endereco?.id ?? pedido?.enderecoId ?? pedido?.id_endereco ?? pedido?.endereco?.id_endereco ?? pedido?.endereco?.id;
+
+          const safeNumber = (v) => {
+            if (v === undefined || v === null || v === '') return undefined;
+            const n = Number(v);
+            return Number.isNaN(n) ? undefined : n;
           };
+
+          const payload = {
+            idUsuario: safeNumber(userIdCandidate),
+            idEndereco: safeNumber(enderecoIdCandidate)
+          };
+
+          // Remove undefined keys to keep request body minimal
+          Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
           await axios.put(`${API_BASE_URL}/pedido/${id}`, payload, config || {});
-          setPedidos(prev => prev.map(p => (p.idPedido === (id) ? { ...p, ...payload, status: payload.status } : p)));
+          setPedidos(prev => prev.map(p => (p.idPedido === (id)
+            ? { ...p, enderecoId: payload.idEndereco ?? p.enderecoId, idCliente: payload.idUsuario ?? p.idCliente }
+            : p
+          )));
         } else {
           // cadastrar: backend espera { endereco_id }
           const enderecoId = endereco?.idEndereco || endereco?.id || endereco?.id_endereco;
@@ -94,6 +111,17 @@ function Pedidos() {
               idCliente: novo.id_cliente ?? novo.idCliente,
               idEndereco: novo.id_endereco ?? novo.endereco_id ?? novo.idEndereco,
               clienteNome: novo.cliente?.nome ?? novo.nome_cliente ?? '',
+              clienteEmail: novo.cliente?.email ?? novo.email_cliente ?? '',
+              clienteCPF: novo.cliente?.cpf ?? novo.cpf_cliente ?? '',
+              clienteTipo: novo.cliente?.tipo ?? novo.tipo_cliente ?? '',
+              enderecoId: novo.endereco?.id_endereco ?? novo.id_endereco ?? novo.endereco_id ?? null,
+              enderecoUsuarioId: novo.endereco?.id_usuario ?? novo.endereco?.id_usuario ?? null,
+              enderecoRua: novo.endereco?.rua ?? novo.rua ?? '',
+              enderecoNumero: novo.endereco?.numero ?? novo.numero ?? '',
+              enderecoBairro: novo.endereco?.bairro ?? novo.bairro ?? '',
+              enderecoCidade: novo.endereco?.cidade ?? novo.cidade ?? '',
+              enderecoEstado: novo.endereco?.estado ?? novo.estado ?? '',
+              enderecoCEP: novo.endereco?.cep ?? novo.cep ?? '',
               enderecoResumo: novo.endereco ? `${novo.endereco.rua}, ${novo.endereco.numero}` : '',
               dataPedido: novo.data ?? novo.dataPedido,
               status: novo.status,
@@ -108,6 +136,17 @@ function Pedidos() {
               idCliente: p.id_cliente ?? p.idCliente,
               idEndereco: p.id_endereco ?? p.endereco_id ?? p.idEndereco,
               clienteNome: p.cliente?.nome ?? p.nome_cliente ?? '',
+              clienteEmail: p.cliente?.email ?? p.email_cliente ?? '',
+              clienteCPF: p.cliente?.cpf ?? p.cpf_cliente ?? '',
+              clienteTipo: p.cliente?.tipo ?? p.tipo_cliente ?? '',
+              enderecoId: p.endereco?.id_endereco ?? p.id_endereco ?? p.endereco_id ?? null,
+              enderecoUsuarioId: p.endereco?.id_usuario ?? p.endereco?.id_usuario ?? null,
+              enderecoRua: p.endereco?.rua ?? p.rua ?? '',
+              enderecoNumero: p.endereco?.numero ?? p.numero ?? '',
+              enderecoBairro: p.endereco?.bairro ?? p.bairro ?? '',
+              enderecoCidade: p.endereco?.cidade ?? p.cidade ?? '',
+              enderecoEstado: p.endereco?.estado ?? p.estado ?? '',
+              enderecoCEP: p.endereco?.cep ?? p.cep ?? '',
               enderecoResumo: p.endereco ? `${p.endereco.rua}, ${p.endereco.numero}` : (p.endereco_resumo ?? ''),
               dataPedido: p.data_pedido ?? p.data ?? p.dataPedido,
               status: p.status ?? 'Pendente',
@@ -164,6 +203,17 @@ function Pedidos() {
               idCliente: p.id_cliente ?? p.idCliente ?? p.id_cliente,
               idEndereco: p.id_endereco ?? p.endereco_id ?? p.idEndereco ?? p.id_endereco,
               clienteNome: p.cliente?.nome ?? p.nome_cliente ?? '',
+              clienteEmail: p.cliente?.email ?? p.email_cliente ?? '',
+              clienteCPF: p.cliente?.cpf ?? p.cpf_cliente ?? '',
+              clienteTipo: p.cliente?.tipo ?? p.tipo_cliente ?? '',
+              enderecoId: p.endereco?.id_endereco ?? p.id_endereco ?? p.endereco_id ?? null,
+              enderecoUsuarioId: p.endereco?.id_usuario ?? p.endereco?.id_usuario ?? null,
+              enderecoRua: p.endereco?.rua ?? p.rua ?? '',
+              enderecoNumero: p.endereco?.numero ?? p.numero ?? '',
+              enderecoBairro: p.endereco?.bairro ?? p.bairro ?? '',
+              enderecoCidade: p.endereco?.cidade ?? p.cidade ?? '',
+              enderecoEstado: p.endereco?.estado ?? p.estado ?? '',
+              enderecoCEP: p.endereco?.cep ?? p.cep ?? '',
               enderecoResumo: p.endereco ? `${p.endereco.rua}, ${p.endereco.numero}` : (p.endereco_resumo ?? ''),
               dataPedido: p.data_pedido ?? p.data ?? p.dataPedido,
               status: p.status ?? p.estado ?? 'Pendente',
