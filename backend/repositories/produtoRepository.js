@@ -176,22 +176,6 @@ async function deleteProduto(id, trx = null) {
     if (!trx) client.release();
   }
 }
-
-export default {
-  getProduto,
-  getProdutos,
-  getProdutosByCategoria,
-  getProdutoByNomeECategoria,
-  createProduto,
-  updateProduto,
-  deleteProduto,
-  diminuirEstoque,
-  aumentarEstoque
-};
-
-// export helper checks
-export { isReferencedInItensPedido, isReferencedInCarrinho };
-
 // Verifica se o produto é referenciado em itens_pedido
 async function isReferencedInItensPedido(produtoId, trx = null) {
   const client = trx || (await BD.conectar());
@@ -215,3 +199,17 @@ async function isReferencedInCarrinho(produtoId, trx = null) {
     if (!trx) client.release();
   }
 }
+
+export default {
+  getProduto,
+  getProdutos,
+  getProdutosByCategoria,
+  getProdutoByNomeECategoria,
+  createProduto,
+  updateProduto,
+  deleteProduto,
+  diminuirEstoque,
+  aumentarEstoque,
+isReferencedInItensPedido, 
+isReferencedInCarrinho }
+

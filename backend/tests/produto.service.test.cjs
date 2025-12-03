@@ -21,6 +21,14 @@ describe('produtoServices', () => {
     produtoRepository.updateProduto = jest.fn();
     produtoRepository.deleteProduto = jest.fn();
 
+    // ADICIONAR AS FUNÇÕES QUE O SERVICE USA
+    produtoRepository.isReferencedInItensPedido = jest.fn();
+    produtoRepository.isReferencedInCarrinho = jest.fn();
+
+    // MOCK PADRÃO = NÃO REFERENCIADO
+    produtoRepository.isReferencedInItensPedido.mockResolvedValue(false);
+    produtoRepository.isReferencedInCarrinho.mockResolvedValue(false);
+
     categoriaRepository.getCategoria = jest.fn();
 
     const serviceMod = await import('../services/produtoServices.js');
@@ -95,6 +103,11 @@ describe('produtoServices', () => {
 
   test('deleteProduto', async () => {
     produtoRepository.getProduto.mockResolvedValue(produto);
+
+    // garante que os mocks usados no service retornam false
+    produtoRepository.isReferencedInItensPedido.mockResolvedValue(false);
+    produtoRepository.isReferencedInCarrinho.mockResolvedValue(false);
+
     produtoRepository.deleteProduto.mockResolvedValue(produto);
 
     const res = await produtoServices.deleteProduto(1);

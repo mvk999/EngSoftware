@@ -23,40 +23,35 @@ skinparam cloud {
 }
 skinparam shadowing false
 
-' =====================================================================
+
 ' CLIENTE
-' =====================================================================
+
 node "Dispositivo do Cliente" {
   node "Navegador Web" {
     component "Frontend React\nSPA (Vite)" as Frontend
   }
 }
 
-' =====================================================================
 ' SERVIDOR DE APLICAÇÃO
-' =====================================================================
+
 node "Servidor de Aplicação\n(Node.js + Express)" as AppServer {
   component "API Backend" as Backend
 }
 
-' =====================================================================
 ' BANCO DE DADOS
-' =====================================================================
+
 node "Servidor de Banco de Dados" {
   database "PostgreSQL\n(db_vought)" as Postgres
 }
 
-' =====================================================================
 ' SERVIÇOS EXTERNOS
-' =====================================================================
+
 node "Serviços Externos" {
   cloud "SMTP / Email\n(Nodemailer)" as SMTP
   cloud "Storage de Imagens\n(local ou S3)" as Storage
 }
 
-' =====================================================================
 ' CONEXÕES (iguais ao estilo do diagrama exemplo)
-' =====================================================================
 
 Frontend --> AppServer : HTTP/HTTPS (JSON)\nPorta 3000
 AppServer --> Postgres : TCP/IP\nPorta 5432\nConsultas SQL

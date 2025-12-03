@@ -93,9 +93,17 @@ async function deleteProduto(req, res) {
     return res.status(200).json(deletado);
   } catch (err) {
     console.error("produtoController.deleteProduto:", err);
-    return res.status(500).json({ message: "Erro ao remover produto." });
+
+    // Erros de regra de negócio
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ erro: err.message });
+    }
+
+    // Erros inesperados
+    return res.status(500).json({ erro: err.message });
   }
 }
+
 
 export default {
   getProdutos,
