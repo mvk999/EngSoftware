@@ -17,6 +17,8 @@ public class TesteProduto {
 
 	@Before
 	public void setUp() {
+		System.setProperty("webdriver.chrome.driver", "/home/marcos/webdrivers/chromedriver");
+
 		driver = new ChromeDriver();
 		driver.manage().window().maximize();
 
@@ -28,11 +30,11 @@ public class TesteProduto {
 	public void testeCadastroProduto() throws InterruptedException {
 
 		// === LOGIN ===
-		loginPage.abrirPaginaLogin("http://localhost:5173/login");
+		loginPage.abrirPaginaLogin();
 		loginPage.fazerLogin("admin@vought.com", "admin123");
 
 		// === NAVEGAR PARA A TELA DE PRODUTOS ===
-		produtoPage.abrirPaginaProduto("http://localhost:5173/produtos");
+		produtoPage.abrirPaginaProduto("http://localhost:5173/produtos"); // Corrigido aqui
 
 		Thread.sleep(1000);
 
@@ -43,7 +45,7 @@ public class TesteProduto {
 
 		// === PREENCHER FORMULÁRIO ===
 		produtoPage.preencherFormularioProduto(
-				"Armas",        // categoria (ajustar no futuro caso necessário)
+				"Armas",                  // categoria
 				"Produto Teste Selenium",
 				"Descrição teste",
 				"1500",
@@ -62,7 +64,6 @@ public class TesteProduto {
 
 		// === FECHAR POPUP ===
 		produtoPage.fecharPopup();
-
 	}
 
 	@After

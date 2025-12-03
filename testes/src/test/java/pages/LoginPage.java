@@ -7,17 +7,17 @@ public class LoginPage {
 
 	private WebDriver driver;
 
-	// ===== Locators (PREENCHA OS IDs reais) =====
-	private By inputEmail = By.id("TODO_EMAIL");   // <-- coloque o id correto
-	private By inputSenha = By.id("TODO_SENHA");   // <-- coloque o id correto
-	private By botaoLogin = By.id("TODO_LOGIN");   // <-- coloque o id correto
+	// ===== Locators =====
+	private By inputEmail = By.id("email-input");
+	private By inputSenha = By.id("password-input");
+	private By botaoLogin = By.id("btn-login");
 
 	public LoginPage(WebDriver driver) {
 		this.driver = driver;
 	}
 
-	// Abre a página de login
-	public void abrirLogin() {
+	// Abre a página de login (coloque a URL correta)
+	public void abrirPaginaLogin() {
 		driver.get("http://localhost:5173/login");
 	}
 
@@ -34,7 +34,7 @@ public class LoginPage {
 
 	// Fluxo completo
 	public void fazerLogin(String email, String senha) {
-		abrirLogin();
+		abrirPaginaLogin();
 		preencherCredenciais(email, senha);
 		clicarLogin();
 	}
