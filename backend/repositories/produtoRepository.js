@@ -188,3 +188,30 @@ export default {
   diminuirEstoque,
   aumentarEstoque
 };
+
+// export helper checks
+export { isReferencedInItensPedido, isReferencedInCarrinho };
+
+// Verifica se o produto é referenciado em itens_pedido
+async function isReferencedInItensPedido(produtoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `SELECT 1 FROM itens_pedido WHERE id_produto = $1 LIMIT 1;`;
+  try {
+    const q = await client.query(sql, [produtoId]);
+    return q.rowCount > 0;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+// Verifica se o produto é referenciado em carrinho
+async function isReferencedInCarrinho(produtoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `SELECT 1 FROM carrinho WHERE id_produto = $1 LIMIT 1;`;
+  try {
+    const q = await client.query(sql, [produtoId]);
+    return q.rowCount > 0;
+  } finally {
+    if (!trx) client.release();
+  }
+}

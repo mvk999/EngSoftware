@@ -1,5 +1,5 @@
 // services/produtoServices.js
-import produtoRepository from "../repositories/produtoRepository.js";
+import produtoRepository, { isReferencedInItensPedido, isReferencedInCarrinho } from "../repositories/produtoRepository.js";
 import categoriaRepository from "../repositories/categoriaRepository.js";
 import { AppError } from "../utils/error.js";
 
@@ -124,6 +124,21 @@ async function updateProduto(
 async function deleteProduto(id) {
   const produto = await produtoRepository.getProduto(id);
   if (!produto) throw new AppError("Produto não encontrado.", 404);
+
+  // Verifica referências que impedem a exclusão
+  const referencedInPedidos = await isReferencedInItensPedido(id);
+  if (referencedInPedidos)
+    throw new AppError(
+      "Não é possível excluir produto: existe(m) item(ns) de pedido referenciando este produto.",
+      400
+    );
+
+  const referencedInCarrinho = await isReferencedInCarrinho(id);
+  if (referencedInCarrinho)
+    throw new AppError(
+      "Não é possível excluir produto: existe(m) item(ns) no carrinho referenciando este produto.",
+      400
+    );
 
   return await produtoRepository.deleteProduto(id);
 }
