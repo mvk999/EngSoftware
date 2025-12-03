@@ -44,6 +44,13 @@ function NavBarAdmin() {
               <img className="IconNav" src={IconNav} alt="Icon" />
               Produtos
             </button>
+            <button
+              className="BotaoNavBar"
+              onClick={() => navigate("/categorias")}
+            >
+              <img className="IconNav" src={IconNav} alt="Icon" />
+              Categorias
+            </button>
           </>
         )}
       </div>

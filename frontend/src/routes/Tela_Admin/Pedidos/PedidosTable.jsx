@@ -189,7 +189,7 @@ function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
                                 color: '#FFC831',
                                 transition: 'opacity 0.2s',
                               }}
-                              title="Deletar"
+                              title="Cancelar Pedido"
                               onClick={() => onDeletePedido && onDeletePedido(row.idPedido)}
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.opacity = '0.7')
@@ -198,7 +198,7 @@ function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
                                 (e.currentTarget.style.opacity = '1')
                               }
                             >
-                              <DeleteIcon sx={{ width: 20, height: 20 }} />
+                              X
                             </button>
                           </Box>
                         </TableCell>

@@ -7,36 +7,15 @@ function PedidoModal({
   onClose,
   onConfirm,
   pedido = null,
-  usuario = null,
-  endereco = null,
   modo = 'editar',
 }) {
   const [pedidoForm, setPedidoForm] = useState({
     idPedido: '',
-      clienteId: '',
-      enderecoId: '',
+    clienteId: '',
+    enderecoId: '',
     dataPedido: '',
     status: '',
     valorTotal: '',
-  });
-
-  const [usuarioForm, setUsuarioForm] = useState({
-    idUsuario: '',
-    nome: '',
-    email: '',
-    cpf: '',
-    tipo: '',
-  });
-
-  const [enderecoForm, setEnderecoForm] = useState({
-    idEndereco: '',
-    idUsuario: '',
-    rua: '',
-    numero: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
-    cep: '',
   });
 
   useEffect(() => {
@@ -63,46 +42,13 @@ function PedidoModal({
         status: resolvedStatus ?? '',
         valorTotal: resolvedValor !== undefined && resolvedValor !== null ? String(resolvedValor) : '',
       });
-
-      const u = usuario ?? pedido?.cliente ?? {};
-      const getUserVal = (o, ...keys) => {
-        for (const k of keys) if (o?.[k] !== undefined) return o[k];
-        return undefined;
-      };
-      setUsuarioForm({
-        idUsuario: getUserVal(u, 'idUsuario', 'id_usuario', 'id') ?? '',
-        nome: getUserVal(u, 'nome', 'name') ?? '',
-        email: getUserVal(u, 'email') ?? '',
-        cpf: getUserVal(u, 'cpf') ?? '',
-        tipo: getUserVal(u, 'tipo') ?? 'CLIENTE',
-      });
-
-      const e = endereco ?? pedido?.endereco ?? {};
-      const getEndVal = (o, ...keys) => {
-        for (const k of keys) if (o?.[k] !== undefined) return o[k];
-        return undefined;
-      };
-      setEnderecoForm({
-        idEndereco: getEndVal(e, 'idEndereco', 'id_endereco', 'id') ?? '',
-        idUsuario: getEndVal(e, 'idUsuario', 'id_usuario', 'usuarioId') ?? getEndVal(usuario, 'idUsuario', 'id') ?? '',
-        rua: getEndVal(e, 'rua', 'logradouro', 'street') ?? '',
-        numero: getEndVal(e, 'numero', 'number') ?? '',
-        bairro: getEndVal(e, 'bairro') ?? '',
-        cidade: getEndVal(e, 'cidade', 'city') ?? '',
-        estado: getEndVal(e, 'estado', 'state') ?? '',
-        cep: getEndVal(e, 'cep', 'zip', 'zipcode') ?? '',
-      });
     }
-  }, [isOpen, pedido, usuario, endereco]);
+  }, [isOpen, pedido]);
 
   const changePedido = (field) => (e) =>
     setPedidoForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const changeUsuario = (field) => (e) =>
-    setUsuarioForm((prev) => ({ ...prev, [field]: e.target.value }));
-
-  const changeEndereco = (field) => (e) =>
-    setEnderecoForm((prev) => ({ ...prev, [field]: e.target.value }));
+  // only pedidoForm changes are needed
 
   const handleConfirm = () => {
     const safeNumber = (v) => {
@@ -112,9 +58,8 @@ function PedidoModal({
     };
 
     const idPedidoVal = safeNumber(pedidoForm.idPedido) ?? safeNumber(pedido?.idPedido);
-    const idClienteVal = safeNumber(pedidoForm.clienteId) ?? safeNumber(usuarioForm.idUsuario) ?? safeNumber(pedido?.idCliente) ?? safeNumber(pedido?.cliente?.idUsuario);
-    const idEnderecoVal = safeNumber(pedidoForm.enderecoId) ?? safeNumber(enderecoForm.idEndereco) ?? safeNumber(pedido?.enderecoId) ?? safeNumber(pedido?.endereco?.idEndereco);
-    const idUsuarioVal = safeNumber(usuarioForm.idUsuario) ?? safeNumber(usuario?.idUsuario) ?? safeNumber(pedido?.cliente?.idUsuario);
+    const idClienteVal = safeNumber(pedidoForm.clienteId) ?? safeNumber(pedido?.idCliente) ?? safeNumber(pedido?.cliente?.id) ?? safeNumber(pedido?.cliente?.idUsuario);
+    const idEnderecoVal = safeNumber(pedidoForm.enderecoId) ?? safeNumber(pedido?.enderecoId) ?? safeNumber(pedido?.id_endereco) ?? safeNumber(pedido?.endereco?.id);
 
     const payload = {
       modo,
@@ -122,21 +67,10 @@ function PedidoModal({
         ...pedido,
         ...pedidoForm,
         idPedido: idPedidoVal,
-        idCliente: idClienteVal,
-        idEndereco: idEnderecoVal,
         valorTotal: safeNumber(pedidoForm.valorTotal) ?? safeNumber(pedido?.valorTotal) ?? 0,
       },
-      usuario: {
-        ...usuario,
-        ...usuarioForm,
-        idUsuario: idUsuarioVal,
-      },
-      endereco: {
-        ...endereco,
-        ...enderecoForm,
-        idEndereco: idEnderecoVal,
-        idUsuario: safeNumber(enderecoForm.idUsuario) ?? idUsuarioVal,
-      },
+      clienteId: idClienteVal,
+      enderecoId: idEnderecoVal,
     };
 
     onConfirm && onConfirm(payload);
@@ -185,169 +119,43 @@ function PedidoModal({
             />
           </div>
 
-          {/* ID Cliente is managed in the Usuario section to avoid duplication */}
-
-          {/* ID Endereço moved to Endereço section to avoid duplication */}
-
           <div className="prod-input-field">
-            <label className="prod-input-label">Data do Pedido</label>
-            <input
-              className="prod-input"
-              value={pedidoForm.dataPedido}
-              onChange={changePedido('dataPedido')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Status</label>
-            <input
-              type="text"
-              className="prod-input"
-              placeholder='Ex.: "Aguardando", "Cancelado"'
-              value={pedidoForm.status}
-              onChange={changePedido('status')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Valor Total</label>
-            <input
-              type="number"
-              step="0.01"
-              className="prod-input"
-              placeholder="0.00"
-              value={pedidoForm.valorTotal}
-              onChange={changePedido('valorTotal')}
-            />
-          </div>
-
-          {/* Seção Usuário */}
-          <h3 className="prod-input-label" style={{ marginTop: '16px' }}>Dados do Cliente (Usuários)</h3>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">ID Usuário</label>
+            <label className="prod-input-label">ID Cliente</label>
             <input
               type="number"
               className="prod-input"
-              value={usuarioForm.idUsuario}
-              onChange={changeUsuario('idUsuario')}
+              value={pedidoForm.clienteId}
+              onChange={changePedido('clienteId')}
             />
           </div>
 
-          <div className="prod-input-field">
-            <label className="prod-input-label">Nome</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={usuarioForm.nome}
-              onChange={changeUsuario('nome')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Email</label>
-            <input
-              type="email"
-              className="prod-input"
-              value={usuarioForm.email}
-              onChange={changeUsuario('email')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">CPF</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={usuarioForm.cpf}
-              onChange={changeUsuario('cpf')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Tipo</label>
-            <input
-              type="text"
-              className="prod-input"
-              placeholder="CLIENTE ou ADMIN"
-              value={usuarioForm.tipo}
-              onChange={changeUsuario('tipo')}
-            />
-          </div>
-
-          {/* Seção Endereço */}
-          <h3 className="prod-input-label" style={{ marginTop: '16px' }}>Endereço de Entrega</h3>
           <div className="prod-input-field">
             <label className="prod-input-label">ID Endereço</label>
             <input
               type="number"
               className="prod-input"
-              value={enderecoForm.idEndereco}
-              onChange={changeEndereco('idEndereco')}
+              value={pedidoForm.enderecoId}
+              onChange={changePedido('enderecoId')}
             />
           </div>
+
 
           <div className="prod-input-field">
-            <label className="prod-input-label">Rua</label>
-            <input
-              type="text"
+            <label className="prod-input-label">Status</label>
+            <select
               className="prod-input"
-              value={enderecoForm.rua}
-              onChange={changeEndereco('rua')}
-            />
+              value={pedidoForm.status}
+              onChange={changePedido('status')}
+            >
+              <option value="">-- Selecione --</option>
+              <option value="pendente">Pendente</option>
+              <option value="processando">Processando</option>
+              <option value="enviado">Enviado</option>
+              <option value="entregue">Entregue</option>
+            </select>
           </div>
 
-          <div className="prod-input-field">
-            <label className="prod-input-label">Número</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={enderecoForm.numero}
-              onChange={changeEndereco('numero')}
-            />
-          </div>
-
-          {/* Complemento removed - not in DB schema */}
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Bairro</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={enderecoForm.bairro}
-              onChange={changeEndereco('bairro')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Cidade</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={enderecoForm.cidade}
-              onChange={changeEndereco('cidade')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">Estado</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={enderecoForm.estado}
-              onChange={changeEndereco('estado')}
-            />
-          </div>
-
-          <div className="prod-input-field">
-            <label className="prod-input-label">CEP</label>
-            <input
-              type="text"
-              className="prod-input"
-              value={enderecoForm.cep}
-              onChange={changeEndereco('cep')}
-            />
-          </div>
+          {/* Usuário e Endereço removidos: o modal agora recebe apenas clienteId/enderecoId e dados do pedido */}
         </div>
 
         <div className="prod-modal-actions">

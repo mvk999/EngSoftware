@@ -53,7 +53,7 @@ export default function Register() {
   return (
     <div className="login-container">
 
-      <div className="login-left"></div>
+      <div className="login-left">
 
       <div className="login-card">
         <span className="voltar" onClick={() => navigate(-1)}>←</span>
@@ -118,7 +118,7 @@ export default function Register() {
           <span onClick={() => navigate("/login")}>Login</span>
         </p>
       </div>
-
+      </div>
       <div className="login-right">
         <img src={LogoLogin} className="login-logo" alt="Vought Tech" />
       </div>

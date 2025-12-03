@@ -1,5 +1,6 @@
 import { BrowserRouter,Route,Routes } from 'react-router-dom';
 import Produtos from './routes/Tela_Admin/Produto/Produtos';
+import Categorias from './routes/Tela_Admin/Categorias/Categorias';
 import Pedidos from './routes/Tela_Admin/Pedidos/Pedidos';
 import Login from './routes/Tela_Login/Login'
 import Register from './routes/Tela_Register/Register'
@@ -27,6 +28,15 @@ function App() {
             element={
               <RotaAdmin>
                 <Produtos />
+              </RotaAdmin>
+            }
+        />
+
+        <Route
+            path="/categorias"
+            element={
+              <RotaAdmin>
+                <Categorias />
               </RotaAdmin>
             }
         />

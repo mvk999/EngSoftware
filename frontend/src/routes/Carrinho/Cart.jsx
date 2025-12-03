@@ -36,6 +36,18 @@ export default function Cart() {
           const resp = await axios.get(`${API_BASE_URL}/carrinho`, config)
           // Normalize items: ensure preco is Number and idProduto exists if provided
           const raw = resp.data?.itens ?? resp.data ?? []
+          // helper: parse price-like values robustly (strings with comma or currency symbols)
+          const parsePrice = (v) => {
+            if (v === undefined || v === null) return 0
+            if (typeof v === 'number') return v
+            const s = String(v).trim()
+            if (s === '') return 0
+            // replace comma decimal with dot and strip non-numeric chars except dot and minus
+            const cleaned = s.replace(/\./g, '').replace(',', '.').replace(/[^0-9.\-]/g, '')
+            const n = Number(cleaned)
+            return Number.isNaN(n) ? 0 : n
+          }
+
           let normalized = raw.map((it) => {
             // support shapes where product info may be nested inside `produto`, `product` or other variants
             const prodObj = it.produto ?? it.product ?? it.produto_id ?? it.prod ?? {}
@@ -94,7 +106,7 @@ export default function Cart() {
             const mapped = {
               ...it,
               nome,
-              preco: typeof precoRaw === 'string' ? Number(precoRaw) : Number(precoRaw || 0),
+              preco: parsePrice(precoRaw),
               idProduto: chosen == null ? null : Number(chosen),
               quantidade: quantidadeVal,
               estoque: estoqueRaw != null ? Number(estoqueRaw) : estoqueRaw,
@@ -202,7 +214,26 @@ export default function Cart() {
 
           if (mounted) setItems(normalized)
           console.log('Carrinho normalizado:', normalized)
-          if (mounted) setServerValorTotal(resp.data?.valorTotal ?? null)
+          // compute client-side subtotal for comparison/debug
+          const computedTotal = normalized.reduce((s, p) => s + (Number(p.preco) || 0) * (Number(p.quantidade) || 0), 0)
+          console.log('Carrinho - server raw response:', resp.data)
+          console.log('Carrinho - computed total from items:', computedTotal)
+          // Extract numeric total sent by server in a robust way.
+          // Backend may return { itens: [...], valorTotal: 123.45 } or { itens: [...], total: 123.45 }
+          // or sometimes return a raw number as resp.data. Avoid assigning arrays/objects.
+          let serverVal = null
+          const candidates = [resp.data?.valorTotal, resp.data?.valor_total, resp.data?.total, resp.data]
+          for (const c of candidates) {
+            if (c === undefined || c === null) continue
+            const n = Number(c)
+            if (!Number.isNaN(n)) { serverVal = n; break }
+          }
+          if (mounted) {
+            setServerValorTotal(Number.isFinite(serverVal) ? serverVal : null)
+            if (Number.isFinite(serverVal) && Math.abs(serverVal - computedTotal) > 0.001) {
+              console.warn('Server total differs from computed items total', { serverVal, computedTotal })
+            }
+          }
       } catch (err) {
         console.error('Erro carregando carrinho', err)
         setError('Não foi possível carregar o carrinho')
@@ -247,7 +278,9 @@ export default function Cart() {
     }
   }
 
-  const subtotal = serverValorTotal != null ? Number(serverValorTotal) : items.reduce((s, p) => s + (Number(p.preco) || 0) * (Number(p.quantidade) || 0), 0)
+  // Prefer client-side computed total so UI updates immediately when items change.
+  // `serverValorTotal` is kept as an informational fallback but should not block UI updates.
+  const subtotal = items.reduce((s, p) => s + (Number(p.preco) || 0) * (Number(p.quantidade) || 0), 0)
   const total = subtotal
   return (
     <div className="cart-root">
@@ -355,7 +388,7 @@ export default function Cart() {
           <div className="summary">
             <div className="summary-row total">
               <span>Total</span>
-              <span>R${total.toFixed(0)}</span>
+              <span>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
             </div>
             <div className="checkout-row">
             <button className="buy-btn" disabled={submitting || items.length === 0} onClick={async () => {

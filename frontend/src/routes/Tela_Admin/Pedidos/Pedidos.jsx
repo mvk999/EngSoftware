@@ -34,6 +34,13 @@ function Pedidos() {
 
   // Abrir modal para EDITAR pedido + cliente + endereço
   const handleAbrirModalEditar = (pedido) => {
+    // prevent editing canceled orders
+    const st = (pedido?.status ?? pedido?.estado ?? '')?.toString()?.toLowerCase();
+    if (st === 'cancelado') {
+      alert('Pedido cancelado não pode ser editado pelo admin.');
+      return;
+    }
+
     // tenta carregar detalhes completos do pedido via API
     const carregarDetalhes = async () => {
       try {
@@ -56,25 +63,24 @@ function Pedidos() {
   };
   
   // Abrir modal para CADASTRAR novo pedido + novo cliente + novo endereço
+  // criação de pedidos não é permitida via admin UI — apenas edição
   const handleAbrirModalCadastrar = () => {
-    setPedidoSelecionado(null);
-    setUsuarioSelecionado(null);
-    setEnderecoSelecionado(null);
-    setModoModal('cadastrar');
-    setShowModal(true);
+    // não faz nada
+    alert('Criação de pedidos não é permitida aqui. Use o fluxo do cliente para criar pedidos.');
   };
 
-  // Confirmar modal: recebe pedido/usuario/endereco já preenchidos
-  const handleConfirmarModal = ({ pedido, usuario, endereco, modo }) => {
+  // Confirmar modal: recebe pedido e apenas IDs de cliente/endereco
+  const handleConfirmarModal = ({ pedido, clienteId, enderecoId, modo }) => {
     // integração com backend: PUT /pedido/{id} para editar, POST /pedido para criar
     const config = getConfig();
     (async () => {
       try {
+        if (modo !== 'editar') {
+          alert('Apenas edição de pedidos é permitida nesta tela.');
+          return;
+        }
         if (modo === 'editar') {
           const id = pedido.id || pedido.idPedido || pedido.id_pedido;
-          // Build payload to update only usuario and endereco for the pedido
-          const userIdCandidate = usuario?.idUsuario ?? usuario?.id ?? pedido?.clienteId ?? pedido?.idCliente ?? pedido?.id_cliente ?? pedido?.cliente?.idUsuario;
-          const enderecoIdCandidate = endereco?.idEndereco ?? endereco?.id ?? pedido?.enderecoId ?? pedido?.id_endereco ?? pedido?.endereco?.id_endereco ?? pedido?.endereco?.id;
 
           const safeNumber = (v) => {
             if (v === undefined || v === null || v === '') return undefined;
@@ -82,78 +88,48 @@ function Pedidos() {
             return Number.isNaN(n) ? undefined : n;
           };
 
-          const payload = {
-            idUsuario: safeNumber(userIdCandidate),
-            idEndereco: safeNumber(enderecoIdCandidate)
+          const payload = {};
+          const clienteIdVal = safeNumber(clienteId) ?? safeNumber(pedido?.clienteId) ?? safeNumber(pedido?.idCliente) ?? safeNumber(pedido?.id_cliente);
+          const enderecoIdVal = safeNumber(enderecoId) ?? safeNumber(pedido?.enderecoId) ?? safeNumber(pedido?.id_endereco) ?? safeNumber(pedido?.endereco?.id);
+          if (clienteIdVal !== undefined) payload.clienteId = clienteIdVal;
+          if (enderecoIdVal !== undefined) payload.enderecoId = enderecoIdVal;
+          // include status and valorTotal if provided by the modal
+          const statusVal = pedido?.status ?? pedido?.estado ?? pedido?.status;
+          if (statusVal !== undefined && statusVal !== '') payload.status = statusVal;
+          const valorTotalVal = safeNumber(pedido?.valorTotal ?? pedido?.valor_total ?? pedido?.total);
+          if (valorTotalVal !== undefined) payload.valorTotal = valorTotalVal;
+
+          // Send update and use returned object to update local state
+          let resp = await axios.put(`${API_BASE_URL}/pedido/${id}`, payload, config || {});
+          let updated = resp.data || {};
+
+          // If backend returned only partial data (e.g., just ids), re-fetch the full pedido to get cliente/endereco details for the UI
+          const lacksCliente = !updated.cliente || Object.keys(updated.cliente).length === 0
+          const lacksEndereco = !updated.endereco || Object.keys(updated.endereco).length === 0
+          if (lacksCliente || lacksEndereco) {
+            try {
+              const resp2 = await axios.get(`${API_BASE_URL}/pedido/${id}`, config || {});
+              updated = resp2.data || updated;
+            } catch (e) {
+              console.warn('Não foi possível re-carregar pedido após atualização:', e.message)
+            }
+          }
+
+          const mappedUpdated = {
+            idPedido: updated.id_pedido ?? updated.id ?? updated.idPedido,
+            idCliente: updated.id_cliente ?? updated.cliente?.id ?? updated.cliente?.id_usuario ?? updated.clienteId,
+            idEndereco: updated.endereco?.id_endereco ?? updated.id_endereco ?? updated.endereco_id ?? updated.enderecoId,
+            clienteNome: updated.cliente?.nome ?? '',
+            enderecoResumo: updated.endereco ? `${updated.endereco.rua}, ${updated.endereco.numero}` : '',
+            dataPedido: updated.data_pedido ?? updated.data ?? updated.dataPedido,
+            status: updated.status,
+            valorTotal: updated.valor_total ?? updated.valorTotal ?? 0,
+            endereco: updated.endereco ?? null,
+            cliente: updated.cliente ?? null,
+            itens: updated.itens ?? []
           };
 
-          // Remove undefined keys to keep request body minimal
-          Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
-
-          await axios.put(`${API_BASE_URL}/pedido/${id}`, payload, config || {});
-          setPedidos(prev => prev.map(p => (p.idPedido === (id)
-            ? { ...p, enderecoId: payload.idEndereco ?? p.enderecoId, idCliente: payload.idUsuario ?? p.idCliente }
-            : p
-          )));
-        } else {
-          // cadastrar: backend espera { endereco_id }
-          const enderecoId = endereco?.idEndereco || endereco?.id || endereco?.id_endereco;
-          if (!enderecoId) {
-            alert('Para criar um pedido é necessário selecionar um endereço.');
-            return;
-          }
-          const resp = await axios.post(`${API_BASE_URL}/pedido`, { endereco_id: enderecoId }, config || {});
-          const novo = resp.data;
-          if (novo) {
-            // mapear para idPedido
-            const mapped = {
-              idPedido: novo.id ?? novo.idPedido,
-              idCliente: novo.id_cliente ?? novo.idCliente,
-              idEndereco: novo.id_endereco ?? novo.endereco_id ?? novo.idEndereco,
-              clienteNome: novo.cliente?.nome ?? novo.nome_cliente ?? '',
-              clienteEmail: novo.cliente?.email ?? novo.email_cliente ?? '',
-              clienteCPF: novo.cliente?.cpf ?? novo.cpf_cliente ?? '',
-              clienteTipo: novo.cliente?.tipo ?? novo.tipo_cliente ?? '',
-              enderecoId: novo.endereco?.id_endereco ?? novo.id_endereco ?? novo.endereco_id ?? null,
-              enderecoUsuarioId: novo.endereco?.id_usuario ?? novo.endereco?.id_usuario ?? null,
-              enderecoRua: novo.endereco?.rua ?? novo.rua ?? '',
-              enderecoNumero: novo.endereco?.numero ?? novo.numero ?? '',
-              enderecoBairro: novo.endereco?.bairro ?? novo.bairro ?? '',
-              enderecoCidade: novo.endereco?.cidade ?? novo.cidade ?? '',
-              enderecoEstado: novo.endereco?.estado ?? novo.estado ?? '',
-              enderecoCEP: novo.endereco?.cep ?? novo.cep ?? '',
-              enderecoResumo: novo.endereco ? `${novo.endereco.rua}, ${novo.endereco.numero}` : '',
-              dataPedido: novo.data ?? novo.dataPedido,
-              status: novo.status,
-              valorTotal: novo.valorTotal ?? novo.valor_total ?? 0,
-            };
-            setPedidos(prev => [...prev, mapped]);
-          } else {
-            // recarrega lista
-            const listResp = await axios.get(`${API_BASE_URL}/pedido`, config || {});
-            const mapped = Array.isArray(listResp.data) ? listResp.data.map(p => ({
-              idPedido: p.id_pedido ?? p.id,
-              idCliente: p.id_cliente ?? p.idCliente,
-              idEndereco: p.id_endereco ?? p.endereco_id ?? p.idEndereco,
-              clienteNome: p.cliente?.nome ?? p.nome_cliente ?? '',
-              clienteEmail: p.cliente?.email ?? p.email_cliente ?? '',
-              clienteCPF: p.cliente?.cpf ?? p.cpf_cliente ?? '',
-              clienteTipo: p.cliente?.tipo ?? p.tipo_cliente ?? '',
-              enderecoId: p.endereco?.id_endereco ?? p.id_endereco ?? p.endereco_id ?? null,
-              enderecoUsuarioId: p.endereco?.id_usuario ?? p.endereco?.id_usuario ?? null,
-              enderecoRua: p.endereco?.rua ?? p.rua ?? '',
-              enderecoNumero: p.endereco?.numero ?? p.numero ?? '',
-              enderecoBairro: p.endereco?.bairro ?? p.bairro ?? '',
-              enderecoCidade: p.endereco?.cidade ?? p.cidade ?? '',
-              enderecoEstado: p.endereco?.estado ?? p.estado ?? '',
-              enderecoCEP: p.endereco?.cep ?? p.cep ?? '',
-              enderecoResumo: p.endereco ? `${p.endereco.rua}, ${p.endereco.numero}` : (p.endereco_resumo ?? ''),
-              dataPedido: p.data_pedido ?? p.data ?? p.dataPedido,
-              status: p.status ?? 'Pendente',
-              valorTotal: p.valor_total ?? p.valorTotal ?? 0,
-            })) : [];
-            setPedidos(mapped);
-          }
+          setPedidos(prev => prev.map(p => (String(p.idPedido) === String(mappedUpdated.idPedido) ? { ...p, ...mappedUpdated } : p)));
         }
 
         setShowModal(false);
@@ -175,11 +151,14 @@ function Pedidos() {
   };
   const handleDeletePedido = async (idPedido) => {
     try {
-      await axios.delete(`${API_BASE_URL}/pedido/${idPedido}`);
+      const config = getConfig();
+      await axios.delete(`${API_BASE_URL}/pedido/${idPedido}`, config || {});
 
-      setPedidos((prev) => prev.filter((p) => p.idPedido !== idPedido));
+      // mark pedido as canceled instead of removing it from list
+      setPedidos((prev) => prev.map((p) => (String(p.idPedido) === String(idPedido) ? { ...p, status: 'cancelado' } : p)));
     } catch (err) {
       console.error("Erro ao excluir pedido:", err);
+      alert(err.response?.data?.erro || 'Erro ao cancelar o pedido.');
     }
   };
 
@@ -255,8 +234,6 @@ function Pedidos() {
         onClose={handleFecharModal}
         onConfirm={handleConfirmarModal}
         pedido={pedidoSelecionado}
-        usuario={usuarioSelecionado}
-        endereco={enderecoSelecionado}
         modo={modoModal}
       />
 
@@ -280,14 +257,7 @@ function Pedidos() {
           />
         </div>
 
-        {/* Botão para abrir modal de cadastro */}
-        <button
-          className="prod-button-admin"
-          onClick={handleAbrirModalCadastrar}
-          style={{ marginTop: '20px' }}
-        >
-          Cadastrar Pedido
-        </button>
+        {/* Botão de cadastro removido — criação não é permitida via admin UI */}
       </div>
     </div>
   );

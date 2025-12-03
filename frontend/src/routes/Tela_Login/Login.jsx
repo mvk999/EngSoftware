@@ -55,7 +55,7 @@ export default function Login() {
     <div className="login-container">
 
       {/* Lado esquerdo cinza escuro */}
-      <div className="login-left"></div>
+      <div className="login-left">
 
       {/* Formulário */}
       <div className="login-card">
@@ -94,6 +94,7 @@ export default function Login() {
           Não tem uma conta?{" "}
           <span onClick={() => navigate("/register")}>Cadastre-se</span>
         </p>
+      </div>
       </div>
 
       {/* Logo direita */}
