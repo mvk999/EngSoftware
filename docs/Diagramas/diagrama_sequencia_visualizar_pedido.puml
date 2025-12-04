@@ -1,0 +1,63 @@
+@startuml  
+title
+Diagrama de Sequência - Vought Tech
+ 
+Fluxo: Buscar Pedido por ID (GET /pedidos/:id)
+end title
+
+actor Admin
+participant "Rota GET /pedidos/:id" as Route
+participant PedidoController
+participant PedidoService
+participant PedidoRepository
+participant ClienteRepository
+participant EnderecoRepository
+database DB
+
+Admin -> Route: Solicita pedido (id)
+Route -> PedidoController: getPedido(req, res)
+PedidoController -> PedidoService: getPedido(id)
+
+alt validação inicial
+  PedidoService -> PedidoService: verifica se ID existe
+  
+  alt ID não fornecido
+    PedidoService -> PedidoController: "lança AppError (ID obrigatório)"
+    PedidoController -> Route: responde 400 - ID obrigatório
+    return
+  end
+end
+
+PedidoService -> PedidoRepository: getPedido(id)
+PedidoRepository -> DB: SELECT * FROM pedidos WHERE id_pedido = $1
+DB --> PedidoRepository: pedido
+
+alt pedido não encontrado
+  PedidoRepository --> PedidoService: null
+  PedidoService -> PedidoController: "lança AppError (Pedido não encontrado)"
+  PedidoController -> Route: responde 404 - Pedido não encontrado
+  return
+else
+  PedidoRepository --> PedidoService: pedido encontrado
+  
+  PedidoService -> PedidoRepository: getItensPedido(id)
+  PedidoRepository -> DB: SELECT * FROM itens_pedido WHERE id_pedido = $1
+  DB --> PedidoRepository: itens
+  PedidoRepository --> PedidoService: lista de itens
+
+  PedidoService -> ClienteRepository: getCliente(pedido.id_cliente)
+  ClienteRepository -> DB: SELECT * FROM usuarios WHERE id_usuario = $1
+  DB --> ClienteRepository: cliente
+  ClienteRepository --> PedidoService: dados do cliente
+
+  PedidoService -> EnderecoRepository: getEndereco(pedido.endereco_id)
+  EnderecoRepository -> DB: SELECT * FROM enderecos WHERE id = $1
+  DB --> EnderecoRepository: endereco
+  EnderecoRepository --> PedidoService: dados do endereço
+
+  PedidoService -> PedidoController: retorna pedido completo (com itens, cliente, endereco)
+  PedidoController -> Route: responde 200 (pedido completo)
+  Route -> Admin: retorna dados do pedido
+end
+
+@enduml

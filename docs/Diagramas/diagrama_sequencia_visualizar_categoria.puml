@@ -1,0 +1,45 @@
+@startuml  
+title
+Diagrama de Sequência - Vought Tech
+ 
+Fluxo: Buscar Categoria por ID (GET /categorias/:id)
+end title
+
+actor Usuario
+participant "Rota GET /categorias/:id" as Route
+participant CategoriaController
+participant CategoriaService
+participant CategoriaRepository
+database DB
+
+Usuario -> Route: Solicita categoria (id)
+Route -> CategoriaController: getCategoria(req, res)
+CategoriaController -> CategoriaService: getCategoria(id)
+
+alt validação inicial
+  CategoriaService -> CategoriaService: verifica se ID existe
+  
+  alt ID não fornecido
+    CategoriaService -> CategoriaController: "lança AppError (ID obrigatório)"
+    CategoriaController -> Route: responde 400 - ID obrigatório
+    return
+  end
+end
+
+CategoriaService -> CategoriaRepository: getCategoria(id)
+CategoriaRepository -> DB: SELECT id_categoria, nome FROM categorias WHERE id_categoria = $1
+DB --> CategoriaRepository: categoria
+
+alt categoria não encontrada
+  CategoriaRepository --> CategoriaService: null
+  CategoriaService -> CategoriaController: "lança AppError (Categoria não encontrada)"
+  CategoriaController -> Route: responde 404 - Categoria não encontrada
+  return
+else
+  CategoriaRepository --> CategoriaService: categoria encontrada
+  CategoriaService -> CategoriaController: retorna categoria
+  CategoriaController -> Route: responde 200 (categoria)
+  Route -> Usuario: retorna dados da categoria
+end
+
+@enduml

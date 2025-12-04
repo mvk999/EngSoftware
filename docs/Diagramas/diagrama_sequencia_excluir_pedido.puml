@@ -1,0 +1,74 @@
+@startuml  
+title
+Diagrama de Sequência - Vought Tech
+ 
+Fluxo: Cancelar Pedido (PUT /pedidos/:id/cancelar)
+end title
+
+actor Cliente
+participant "Rota PUT /pedidos/:id/cancelar" as Route
+participant PedidoController
+participant PedidoService
+participant PedidoRepository
+participant ProdutoRepository
+database DB
+
+Cliente -> Route: Solicita cancelamento (id)
+Route -> PedidoController: cancelarPedidoCliente(req, res)
+PedidoController -> PedidoService: cancelarPedidoCliente(pedidoId, clienteId)
+
+PedidoService -> PedidoRepository: getPedido(pedidoId)
+PedidoRepository -> DB: SELECT * FROM pedidos WHERE id_pedido = $1
+DB --> PedidoRepository: pedido
+
+alt pedido não encontrado
+  PedidoRepository --> PedidoService: null
+  PedidoService -> PedidoController: "lança AppError (Pedido não encontrado)"
+  PedidoController -> Route: responde 404 - Pedido não encontrado
+  return
+end
+
+PedidoRepository --> PedidoService: pedido encontrado
+
+alt verificação de permissão
+  alt pedido não pertence ao cliente
+    PedidoService -> PedidoController: "lança AppError (Sem permissão)"
+    PedidoController -> Route: responde 403 - Sem permissão
+    return
+  end
+end
+
+alt verificação de status
+  alt status é "cancelado" ou "entregue"
+    PedidoService -> PedidoController: "lança AppError (Não é possível cancelar)"
+    PedidoController -> Route: responde 400 - Não é possível cancelar este pedido
+    return
+  end
+end
+
+PedidoService -> DB: inicia transação
+activate PedidoService
+
+PedidoService -> PedidoRepository: getItensPedido(pedidoId, trx)
+PedidoRepository -> DB: SELECT * FROM itens_pedido WHERE id_pedido = $1
+DB --> PedidoRepository: itens
+PedidoRepository --> PedidoService: lista de itens
+
+loop para cada item do pedido
+  PedidoService -> ProdutoRepository: aumentarEstoque(item.id_produto, item.quantidade, trx)
+  ProdutoRepository -> DB: UPDATE produtos SET estoque = estoque + $1 WHERE id_produto = $2
+  DB --> ProdutoRepository: estoque atualizado
+  ProdutoRepository --> PedidoService: sucesso
+end
+
+PedidoService -> PedidoRepository: atualizarStatus(pedidoId, "cancelado", trx)
+PedidoRepository -> DB: UPDATE pedidos SET status = 'cancelado' WHERE id_pedido = $1
+DB --> PedidoRepository: pedido atualizado
+PedidoRepository --> PedidoService: pedido cancelado
+
+deactivate PedidoService
+PedidoService -> PedidoController: retorna pedido cancelado
+PedidoController -> Route: responde 200 (pedido cancelado)
+Route -> Cliente: confirmação de cancelamento
+
+@enduml
