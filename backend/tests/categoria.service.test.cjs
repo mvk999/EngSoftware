@@ -1,33 +1,43 @@
+// tests/categoria.service.test.cjs
+
+// 1) Mockar os módulos de repositório ANTES de importar o service
+jest.mock('../repositories/categoriaRepository.js', () => ({
+  __esModule: true,
+  default: {
+    getAllCategorias: jest.fn(),
+    getCategoria: jest.fn(),
+    getCategoriaByNome: jest.fn(),
+    createCategoria: jest.fn(),
+    updateCategoria: jest.fn(),
+    deleteCategoria: jest.fn()
+  }
+}));
+
+jest.mock('../repositories/produtoRepository.js', () => ({
+  __esModule: true,
+  default: {
+    getProdutosByCategoria: jest.fn()
+  }
+}));
+
+// 2) Agora importe os módulos (os mocks estarão ativos)
+const categoriaRepoMod = await import('../repositories/categoriaRepository.js');
+const produtoRepoMod = await import('../repositories/produtoRepository.js');
+
+const categoriaRepository = categoriaRepoMod.default;
+const produtoRepository = produtoRepoMod.default;
+
+const svcMod = await import('../services/categoriaServices.js');
+const categoriaServices = svcMod.default;
+
 describe('categoriaServices', () => {
-  let categoriaServices;
-  let categoriaRepository;
-  let produtoRepository;
-
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.clearAllMocks();
-
-    const catRepoMod = await import('../repositories/categoriaRepository.js');
-    const prodRepoMod = await import('../repositories/produtoRepository.js');
-
-    categoriaRepository = catRepoMod.default;
-    produtoRepository = prodRepoMod.default;
-
-    categoriaRepository.getAllCategorias = jest.fn();
-    categoriaRepository.getCategoria = jest.fn();
-    categoriaRepository.getCategoriaByNome = jest.fn();
-    categoriaRepository.createCategoria = jest.fn();
-    categoriaRepository.updateCategoria = jest.fn();
-    categoriaRepository.deleteCategoria = jest.fn();
-
-    produtoRepository.getProdutosByCategoria = jest.fn();
-
-    const svc = await import('../services/categoriaServices.js');
-    categoriaServices = svc.default;
   });
 
   test('createCategoria', async () => {
     categoriaRepository.getCategoriaByNome.mockResolvedValue(null);
-    categoriaRepository.createCategoria.mockResolvedValue({ id: 1, nome: 'Tecnologia' });
+    categoriaRepository.createCategoria.mockResolvedValue({ id_categoria: 1, nome: 'Tecnologia' });
 
     const res = await categoriaServices.createCategoria('Tecnologia');
 
@@ -37,7 +47,7 @@ describe('categoriaServices', () => {
   });
 
   test('getCategoria', async () => {
-    categoriaRepository.getCategoria.mockResolvedValue({ id: 2, nome: 'Acessórios' });
+    categoriaRepository.getCategoria.mockResolvedValue({ id_categoria: 2, nome: 'Acessórios' });
 
     const res = await categoriaServices.getCategoria(2);
 
@@ -53,9 +63,9 @@ describe('categoriaServices', () => {
   });
 
   test('updateCategoria', async () => {
-    categoriaRepository.getCategoria.mockResolvedValue({ id: 3, nome: 'Old' });
+    categoriaRepository.getCategoria.mockResolvedValue({ id_categoria: 3, nome: 'Old' });
     categoriaRepository.getCategoriaByNome.mockResolvedValue(null);
-    categoriaRepository.updateCategoria.mockResolvedValue({ id: 3, nome: 'Novo' });
+    categoriaRepository.updateCategoria.mockResolvedValue({ id_categoria: 3, nome: 'Novo' });
 
     const res = await categoriaServices.updateCategoria(3, 'Novo');
 
@@ -65,16 +75,16 @@ describe('categoriaServices', () => {
   });
 
   test('deleteCategoria_with_products_throws', async () => {
-    categoriaRepository.getCategoria.mockResolvedValue({ id: 4, nome: 'Com Produto' });
+    categoriaRepository.getCategoria.mockResolvedValue({ id_categoria: 4, nome: 'Com Produto' });
     produtoRepository.getProdutosByCategoria.mockResolvedValue([{ id_produto: 1 }]);
 
     await expect(categoriaServices.deleteCategoria(4)).rejects.toThrow('Não é possível excluir esta categoria pois ela está associada a produtos.');
   });
 
   test('deleteCategoria_success', async () => {
-    categoriaRepository.getCategoria.mockResolvedValue({ id: 5, nome: 'Sem Produto' });
+    categoriaRepository.getCategoria.mockResolvedValue({ id_categoria: 5, nome: 'Sem Produto' });
     produtoRepository.getProdutosByCategoria.mockResolvedValue([]);
-    categoriaRepository.deleteCategoria.mockResolvedValue({ id: 5, nome: 'Sem Produto' });
+    categoriaRepository.deleteCategoria.mockResolvedValue({ id_categoria: 5, nome: 'Sem Produto' });
 
     const res = await categoriaServices.deleteCategoria(5);
 
