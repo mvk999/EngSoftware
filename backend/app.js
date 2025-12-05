@@ -22,25 +22,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-async function startServer() {
+// AS ROTAS DEVEM SER REGISTRADAS SEMPRE (test ou não)
+const uploadsPath = path.join(__dirname, "docs_backend", "uploads");
+app.use("/uploads", express.static(uploadsPath));
+
+// ROTAS PRINCIPAIS
+app.use("/", router);
+
+// Swagger (não atrapalha os testes)
+swaggerDocs(app);
+
+// Tratamento global de erros
+app.use(errorHandler);
+
+// SERVIDOR (só roda fora do teste)
+
+export async function startServer() {
     try {
         await db.initDB();
 
-        //  Servir imagens (rota pública /uploads -> pasta docs_backend/uploads)
-        const uploadsPath = path.join(__dirname, 'docs_backend', 'uploads');
-        console.log('📁 Caminho de uploads:', uploadsPath);
-        app.use('/uploads', express.static(uploadsPath));
-
-        // Rotas principais
-        app.use("/", router);
-
-        // Swagger
-        swaggerDocs(app);
-
-        // Tratamento global de erros
-        app.use(errorHandler);
-
-        // Start
         app.listen(port, () => {
             console.log(`🚀 Servidor rodando em http://localhost:${port}`);
         });
@@ -51,4 +51,8 @@ async function startServer() {
     }
 }
 
-startServer();
+if (process.env.NODE_ENV !== "test") {
+    startServer();
+}
+
+export default app;
