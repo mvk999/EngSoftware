@@ -1,0 +1,21 @@
+2025-12-09 19:21:52,364 [main] INFO  tests.ProdutoCRUDTest - Driver iniciado e páginas carregadas.
+2025-12-09 19:21:52,460 [main] INFO  tests.ProdutoCRUDTest - Iniciando teste: testCadastrarProduto
+2025-12-09 19:21:52,462 [main] INFO  tests.ProdutoCRUDTest - Abrindo página de login...
+2025-12-09 19:21:53,053 [main] INFO  tests.ProdutoCRUDTest - Página de login carregada.
+2025-12-09 19:21:53,054 [main] INFO  tests.ProdutoCRUDTest - Realizando login...
+2025-12-09 19:21:53,546 [main] INFO  tests.ProdutoCRUDTest - Login realizado com sucesso.
+2025-12-09 19:21:53,742 [main] INFO  tests.ProdutoCRUDTest - Criação categoria via API retornou status 400: {"message":"Já existe uma categoria com esse nome."}
+2025-12-09 19:21:54,453 [main] INFO  tests.ProdutoCRUDTest - Botão produtos clicado.
+2025-12-09 19:21:54,711 [main] INFO  tests.ProdutoCRUDTest - Botão cadastrar produto clicado.
+2025-12-09 19:21:54,711 [main] INFO  pages.ProdutoPage - Tentando abrir o modal de cadastro de produto...
+2025-12-09 19:21:55,785 [main] WARN  pages.ProdutoPage - Falha no clique direto. Tentando fallback via JS...
+2025-12-09 19:21:55,865 [main] INFO  pages.ProdutoPage - Modal de cadastro aberto com sucesso.
+2025-12-09 19:21:55,866 [main] INFO  tests.ProdutoCRUDTest - Modal de cadastro visível.
+2025-12-09 19:21:55,866 [main] INFO  pages.ProdutoPage - Preenchendo formulário do produto: nome=Produto Teste 1765318915866, descricao=Descrição Teste, preco=59.90, estoque=20
+2025-12-09 19:21:55,892 [main] INFO  pages.ProdutoPage - Selecionando categoria padrão: Periféricos
+2025-12-09 19:21:57,007 [main] INFO  tests.ProdutoCRUDTest - Valor atual do select antes de confirmar: 10
+2025-12-09 19:21:57,007 [main] INFO  pages.ProdutoPage - Confirmando cadastro do produto...
+2025-12-09 19:21:57,109 [main] INFO  pages.ProdutoPage - Validando popup de sucesso...
+2025-12-09 19:21:57,657 [main] INFO  pages.ProdutoPage - Popup de sucesso detectado e fechado: Produto cadastrado com sucesso.
+2025-12-09 19:21:57,657 [main] INFO  tests.ProdutoCRUDTest - Popup de sucesso validado: true
+2025-12-09 19:22:04,321 [main] INFO  tests.ProdutoCRUDTest - Driver finalizado.

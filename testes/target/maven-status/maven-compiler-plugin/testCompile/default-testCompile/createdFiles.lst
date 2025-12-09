@@ -1,0 +1,9 @@
+tests\TesteProduto.class
+pages\ProdutoPage.class
+tests\DriverFactoryLegacy.class
+pages\LoginPage.class
+utils\DriverFactory.class
+pages\TesteProdutoPlaceholder.class
+tests\DriverFactory.class
+resources\ProdutoCRUDTestPlaceholder.class
+tests\ProdutoCRUDTest.class
