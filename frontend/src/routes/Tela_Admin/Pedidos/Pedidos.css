@@ -1,0 +1,61 @@
+/* Pedidos.css - estilos baseados no layout fornecido */
+
+.Container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: #15141B; /* Common/black-01 */
+  font-family: 'Poppins', sans-serif;
+  color: #C4CDD5;
+  display: flex;
+}
+
+.ContentCategorias {
+  margin-left: 260px; /* espaço para a sidebar do NavBarAdmin */
+  padding: 24px;
+}
+
+.TopContentCategorias {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-direction: row-reverse;
+}
+
+.TopContentCategorias img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.ButtonAdmin {
+  background: #FFC831;
+  color: #15141B;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 100px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.PedidosWrapper {
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 984px;
+  margin: 0 auto 24px auto;
+}
+
+.PedidosHeader {
+  color: #C4CDD5;
+  font-weight: 500;
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+
+/* Ajustes responsivos mínimos */
+@media (max-width: 1100px) {
+  .ContentCategorias { margin-left: 0; padding: 16px; }
+  .PedidosWrapper { max-width: 100%; }
+}

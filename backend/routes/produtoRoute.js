@@ -19,6 +19,9 @@ router.get(
     errorBoundary(produtoController.getProduto)
 );
 
+router.get("/:id", errorBoundary(produtoController.getProduto));
+
+
 // -------------------------
 // ROTAS ADMIN 
 // -------------------------

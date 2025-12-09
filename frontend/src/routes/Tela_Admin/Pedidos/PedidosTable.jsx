@@ -17,14 +17,25 @@ import DeleteIcon from '@mui/icons-material/Delete';
 const columns = [
   { id: 'idPedido', label: 'ID_PEDIDO', minWidth: 90 },
   { id: 'idCliente', label: 'ID_CLIENTE', minWidth: 100 },
+  { id: 'clienteNome', label: 'CLIENTE_NOME', minWidth: 140 },
+  { id: 'clienteEmail', label: 'CLIENTE_EMAIL', minWidth: 180 },
+  { id: 'clienteCPF', label: 'CLIENTE_CPF', minWidth: 120 },
+  { id: 'clienteTipo', label: 'CLIENTE_TIPO', minWidth: 100 },
   { id: 'idEndereco', label: 'ID_ENDERECO', minWidth: 110 },
+  { id: 'enderecoResumo', label: 'ENDERECO_RESUMO', minWidth: 220 },
+  { id: 'enderecoRua', label: 'RUA', minWidth: 160 },
+  { id: 'enderecoNumero', label: 'NUM', minWidth: 60 },
+  { id: 'enderecoBairro', label: 'BAIRRO', minWidth: 140 },
+  { id: 'enderecoCidade', label: 'CIDADE', minWidth: 120 },
+  { id: 'enderecoEstado', label: 'ESTADO', minWidth: 80 },
+  { id: 'enderecoCEP', label: 'CEP', minWidth: 100 },
   { id: 'dataPedido', label: 'DATA_PEDIDO', minWidth: 170 },
   { id: 'status', label: 'STATUS', minWidth: 130 },
   { id: 'valorTotal', label: 'VALOR_TOTAL', minWidth: 120, align: 'right' },
   { id: 'actions', label: 'AÇÕES', minWidth: 120, align: 'right' },
 ];
 
-function PedidosTable({ pedidos, onEditarPedido }) {
+function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 5;
 
@@ -107,6 +118,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
             <TableBody>
               {currentRows.map((row, index) => (
                 <TableRow
+                  id={row.idPedido ? `row-pedido-${row.idPedido}` : undefined}
                   key={row.idPedido}
                   sx={{
                     backgroundColor: '#191922',
@@ -143,6 +155,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                             }}
                           >
                             <button
+                              id={row.idPedido ? `btn-pedido-editar-${row.idPedido}` : undefined}
                               style={{
                                 background: 'none',
                                 border: 'none',
@@ -155,9 +168,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                                 transition: 'opacity 0.2s',
                               }}
                               title="Editar"
-                              onClick={() =>
-                                onEditarPedido && onEditarPedido(row.id)
-                              }
+                              onClick={() => onEditarPedido && onEditarPedido(row)}
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.opacity = '0.7')
                               }
@@ -169,6 +180,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                             </button>
 
                             <button
+                              id={row.idPedido ? `btn-pedido-cancelar-${row.idPedido}` : undefined}
                               style={{
                                 background: 'none',
                                 border: 'none',
@@ -180,7 +192,8 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                                 color: '#FFC831',
                                 transition: 'opacity 0.2s',
                               }}
-                              title="Deletar"
+                              title="Cancelar Pedido"
+                              onClick={() => onDeletePedido && onDeletePedido(row.idPedido)}
                               onMouseEnter={(e) =>
                                 (e.currentTarget.style.opacity = '0.7')
                               }
@@ -188,7 +201,7 @@ function PedidosTable({ pedidos, onEditarPedido }) {
                                 (e.currentTarget.style.opacity = '1')
                               }
                             >
-                              <DeleteIcon sx={{ width: 20, height: 20 }} />
+                              X
                             </button>
                           </Box>
                         </TableCell>

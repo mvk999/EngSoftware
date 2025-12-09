@@ -108,6 +108,7 @@
     background-color: transparent;
     margin:0;
     padding: 0;
+    cursor:pointer;
 }
 
 .navbar__search-input {
@@ -186,6 +187,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 5px 0 8px rgba(0, 0, 0, 0.3);
 }
 
 .product-card__image-wrapper {
@@ -202,6 +204,7 @@
 .product-card__image {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
 }
 

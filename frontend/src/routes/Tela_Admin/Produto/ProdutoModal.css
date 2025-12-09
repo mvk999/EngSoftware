@@ -21,7 +21,6 @@
 /* Modal Container */
 .prod-modal-content {
   position: relative;
-  width: 387px;
   max-height: 90vh;
   background: #191922;
   box-shadow: 0px 20px 24px -4px rgba(10, 13, 18, 0.1),
@@ -138,7 +137,6 @@
 .prod-input-field {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 6px;
   width: 100%;
 }
@@ -171,6 +169,18 @@
   line-height: 24px;
   color: #191922;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.prod-imagem-preview {
+  margin-top: 8px;
+}
+
+.prod-imagem-preview img {
+  max-width: 100%;
+  max-height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #ddd;
 }
 
 .prod-input::placeholder {

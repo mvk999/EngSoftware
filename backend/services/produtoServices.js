@@ -7,6 +7,7 @@ async function getProdutos() {
   return await produtoRepository.getProdutos();
 }
 
+
 /**
  * Criar produto + imagem
  */
@@ -124,11 +125,40 @@ async function deleteProduto(id) {
   const produto = await produtoRepository.getProduto(id);
   if (!produto) throw new AppError("Produto não encontrado.", 404);
 
+  // Verifica referências que impedem a exclusão
+  const referencedInPedidos = await produtoRepository.isReferencedInItensPedido(id);
+
+  if (referencedInPedidos)
+    throw new AppError(
+      "Não é possível excluir produto: existe(m) item(ns) de pedido referenciando este produto.",
+      400
+    );
+
+  const referencedInCarrinho = await produtoRepository.isReferencedInCarrinho(id);
+
+
+  if (referencedInCarrinho)
+    throw new AppError(
+      "Não é possível excluir produto: existe(m) item(ns) no carrinho referenciando este produto.",
+      400
+    );
+
   return await produtoRepository.deleteProduto(id);
 }
 
+async function getProduto(id) {
+  if (!id) throw new AppError("ID é obrigatório.", 400);
+
+  const produto = await produtoRepository.getProduto(id);
+  if (!produto) throw new AppError("Produto não encontrado.", 404);
+
+  return produto;
+}
+
+
 export default {
   getProdutos,
+  getProduto,
   createProduto,
   updateProduto,
   deleteProduto

@@ -80,7 +80,7 @@ export default function EsqueceuSenha() {
   return (
     <div className="login-container">
 
-      <div className="login-left"></div>
+      <div className="login-left">
 
       <div className="login-card">
 
@@ -170,7 +170,7 @@ export default function EsqueceuSenha() {
         )}
 
       </div>
-
+      </div>
       <div className="login-right">
         <img src={LogoLogin} className="login-logo" alt="Vought Tech" />
       </div>

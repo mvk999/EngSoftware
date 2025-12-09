@@ -381,6 +381,35 @@
         }
       }
     },
+    "/cliente/{id}": {
+  "get": {
+    "tags": ["Cliente"],
+    "summary": "Obtém cliente por ID",
+    "security": [{ "bearerAuth": [] }], 
+    "parameters": [
+      { "$ref": "#/components/parameters/id" }
+    ],
+    "responses": {
+      "200": {
+        "description": "Cliente encontrado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Cliente" },
+            "example": {
+              "id": 5,
+              "nome": "Marcos Silva",
+              "email": "marcos@gmail.com",
+              "cpf": "12345678900",
+              "tipo": "CLIENTE"
+            }
+          }
+        }
+      },
+      "404": { "$ref": "#/components/responses/NotFound" }
+    }
+  }
+},
+
 
     "/categoria": {
       "get": {
@@ -490,49 +519,24 @@
     },
     "/produto": {
   "get": {
-    "tags": ["Produto"],
-    "summary": "Lista produtos com filtros e busca (RF011)",
-    "security": [],
-    "parameters": [
-      {
-        "name": "q",
-        "in": "query",
-        "required": false,
-        "schema": { "type": "string" },
-        "description": "Busca pelo nome do produto (RBR-101: corresponde apenas ao nome)"
-      },
-      {
-        "name": "categoria",
-        "in": "query",
-        "required": false,
-        "schema": { "type": "integer" },
-        "description": "Filtrar por categoria (RF011)"
-      },
-      {
-        "name": "ordenar",
-        "in": "query",
-        "schema": {
-          "type": "string",
-          "enum": ["nome_asc", "nome_desc", "preco_asc", "preco_desc"]
-        },
-        "description": "Ordenação opcional (RF011)"
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Lista de produtos encontrados",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/Produto" }
-            }
+  "tags": ["Produto"],
+  "summary": "Lista todos os produtos",
+  "security": [],
+  "responses": {
+    "200": {
+      "description": "Lista de produtos encontrados",
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Produto" }
           }
         }
-      },
-      "400": { "$ref": "#/components/responses/BadRequest" }
+      }
     }
-  },
+  }
+},
+
 
 
       "post": {
@@ -578,48 +582,76 @@
 
 
         "/produto/{id}": {
-      "put": {
+          "get": {
   "tags": ["Produto"],
-  "summary": "Atualiza produto existente (ADMIN) — RF014",
-  "security": [{ "bearerAuth": [] }],
+  "summary": "Obtém produto por ID (RF011)",
+  "security": [],
   "parameters": [
     { "$ref": "#/components/parameters/id" }
   ],
-  "requestBody": {
-    "content": {
-      "multipart/form-data": {
-        "schema": {
-          "type": "object",
-          "properties": {
-            "nome": { "type": "string" },
-            "descricao": { "type": "string" },
-            "preco": { "type": "number", "format": "float" },
-            "estoque": { "type": "integer" },
-            "idCategoria": { "type": "integer" },
-            "imagem": {
-              "type": "string",
-              "format": "binary",
-              "description": "Nova imagem opcional"
+  "responses": {
+    "200": {
+      "description": "Produto encontrado",
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/Produto" },
+          "example": {
+            "id_produto": 3,
+            "nome": "Hambúrguer Artesanal",
+            "descricao": "Pão brioche, carne 200g, queijo e molho especial",
+            "preco": 25.90,
+            "estoque": 12,
+            "id_categoria": 1,
+            "imagem": null
+          }
+        }
+      }
+    },
+    "404": { "$ref": "#/components/responses/NotFound" }
+  }
+},
+  "put": {
+    "tags": ["Produto"],
+    "summary": "Atualiza produto existente (ADMIN) — RF014",
+    "security": [{ "bearerAuth": [] }],
+    "parameters": [
+      { "$ref": "#/components/parameters/id" }
+    ],
+    "requestBody": {
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "nome": { "type": "string" },
+              "descricao": { "type": "string" },
+              "preco": { "type": "number", "format": "float" },
+              "estoque": { "type": "integer" },
+              "idCategoria": { "type": "integer" },
+              "imagem": {
+                "type": "string",
+                "format": "binary",
+                "description": "Nova imagem opcional"
+              }
             }
           }
         }
       }
+    },
+    "responses": {
+      "200": {
+        "description": "Produto atualizado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Produto" }
+          }
+        }
+      },
+      "400": { "$ref": "#/components/responses/BadRequest" },
+      "404": { "$ref": "#/components/responses/NotFound" },
+      "403": { "$ref": "#/components/responses/Forbidden" }
     }
   },
-  "responses": {
-    "200": {
-      "description": "Produto atualizado",
-      "content": {
-        "application/json": {
-          "schema": { "$ref": "#/components/schemas/Produto" }
-        }
-      }
-    },
-    "400": { "$ref": "#/components/responses/BadRequest" },
-    "404": { "$ref": "#/components/responses/NotFound" },
-    "403": { "$ref": "#/components/responses/Forbidden" }
-  }
-},
 
 
       "delete": {
@@ -920,46 +952,78 @@
         }
       },
       "put": {
-    "tags": ["Pedido"],
-    "summary": "Atualiza pedido (status, itens e estoque) — RF008",
-    "security": [{ "bearerAuth": [] }],
-    "parameters": [
-      { "$ref": "#/components/parameters/id" }
-    ],
-    "requestBody": {
-      "required": true,
-      "content": {
-        "application/json": {
-          "schema": {
-            "type": "object",
-            "properties": {
-              "status": {
-                "type": "string",
-                "enum": ["pendente","processando","enviado","entregue","cancelado"]
-              },
-              "itens": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "idProduto": { "type": "integer" },
-                    "quantidade": { "type": "integer" }
-                  }
-                }
+  "tags": ["Pedido"],
+  "summary": "Atualiza status, itens, cliente e endereço de um pedido (ADMIN) — RF008",
+  "security": [{ "bearerAuth": [] }],
+  "parameters": [
+    { "$ref": "#/components/parameters/id" }
+  ],
+  "requestBody": {
+    "required": true,
+    "content": {
+      "application/json": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["pendente", "processando", "enviado", "entregue", "cancelado"]
+            },
+            "itens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "idProduto": { "type": "integer" },
+                  "quantidade": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["idProduto", "quantidade"]
               }
             },
-            "required": ["status","itens"]
+            "removerItens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "idProduto": { "type": "integer" }
+                },
+                "required": ["idProduto"]
+              }
+            },
+            "clienteId": { "type": "integer" },
+            "enderecoId": { "type": "integer" },
+            "endereco": {
+              "type": "object",
+              "properties": {
+                "rua": { "type": "string" },
+                "numero": { "type": "string" },
+                "bairro": { "type": "string" },
+                "cidade": { "type": "string" },
+                "estado": { "type": "string" },
+                "cep": { "type": "string" }
+              }
+            }
           }
         }
       }
-    },
-    "responses": {
-      "200": { "description": "Pedido atualizado" },
-      "400": { "$ref": "#/components/responses/BadRequest" },
-      "404": { "$ref": "#/components/responses/NotFound" },
-      "403": { "$ref": "#/components/responses/Forbidden" }
     }
   },
+  "responses": {
+    "200": {
+      "description": "Pedido atualizado com sucesso",
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/Pedido" }
+        }
+      }
+    },
+    "400": { "$ref": "#/components/responses/BadRequest" },
+    "401": { "$ref": "#/components/responses/Unauthorized" },
+    "403": { "$ref": "#/components/responses/Forbidden" },
+    "404": { "$ref": "#/components/responses/NotFound" }
+  }
+},
+
 
       "delete": {
         "tags": ["Pedido"],
@@ -1048,25 +1112,6 @@
       "403": { "$ref": "#/components/responses/Forbidden" }
 },
     "/endereco":{
-  "get": {
-    "tags": ["Endereco"],
-    "summary": "Lista todos os endereços do usuário autenticado",
-    "security": [{ "bearerAuth": [] }],
-    "responses": {
-      "200": {
-        "description": "Lista carregada",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/Endereco" }
-            }
-          }
-        }
-      },
-      "401": { "$ref": "#/components/responses/Unauthorized" }
-    }
-  },
 
   "post": {
     "tags": ["Endereco"],
@@ -1093,6 +1138,28 @@
     }
   }
 },
+"/endereco/me": {
+  "get": {
+    "tags": ["Endereco"],
+    "summary": "Lista todos os endereços do usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "responses": {
+      "200": {
+        "description": "Lista de endereços do usuário",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Endereco" }
+            }
+          }
+        }
+      },
+      "401": { "$ref": "#/components/responses/Unauthorized" }
+    }
+  }
+},
+
 
 "/endereco/{id}": {
   "get": {
@@ -1113,36 +1180,6 @@
       },
       "404": { "$ref": "#/components/responses/NotFound" }
     }
-  },
-
-  "put": {
-    "tags": ["Endereco"],
-    "summary": "Atualiza um endereço do usuário autenticado",
-    "security": [{ "bearerAuth": [] }],
-    "parameters": [
-      { "$ref": "#/components/parameters/id" }
-    ],
-    "requestBody": {
-      "required": true,
-      "content": {
-        "application/json": {
-          "schema": { "$ref": "#/components/schemas/EnderecoUpdateRequest" }
-        }
-      }
-    },
-    "responses": {
-      "200": {
-        "description": "Endereço atualizado com sucesso",
-        "content": {
-          "application/json": {
-            "schema": { "$ref": "#/components/schemas/Endereco" }
-          }
-        }
-      },
-      "400": { "$ref": "#/components/responses/BadRequest" },
-      "404": { "$ref": "#/components/responses/NotFound" }
-    }
   }
 }
     }}
-

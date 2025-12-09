@@ -55,7 +55,7 @@ export default function Login() {
     <div className="login-container">
 
       {/* Lado esquerdo cinza escuro */}
-      <div className="login-left"></div>
+      <div className="login-left">
 
       {/* Formulário */}
       <div className="login-card">
@@ -68,6 +68,7 @@ export default function Login() {
           <label className="label">Email</label>
           <input
             type="email"
+            id="email-input"
             placeholder="exemplo@gmail.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -76,6 +77,7 @@ export default function Login() {
 
           <label className="label">Senha</label>
           <input
+            id="password-input"
             type="password"
             placeholder="********"
             value={senha}
@@ -85,7 +87,7 @@ export default function Login() {
 
           <a className="esqueceu" href="/esqueceu">Esqueceu a Senha?</a>
 
-          <button className="btn-login" type="submit" disabled={loading}>
+          <button id="btn-login" className="btn-login" type="submit" disabled={loading}>
             {loading ? "Entrando..." : "LOGIN →"}
           </button>
         </form>
@@ -94,6 +96,7 @@ export default function Login() {
           Não tem uma conta?{" "}
           <span onClick={() => navigate("/register")}>Cadastre-se</span>
         </p>
+      </div>
       </div>
 
       {/* Logo direita */}

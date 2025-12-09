@@ -4,27 +4,24 @@ import { AppError } from "../utils/error.js";
 
 async function getProdutos(req, res) {
   try {
-    const termo = req.query.q || null;
-
-    const categoriaIdQuery =
-      req.query.categoriaId ??
-      req.query.idCategoria ??
-      req.query.id_categoria ??
-      null;
-
-    const filtros = {
-      termo,
-      categoriaId: categoriaIdQuery,
-      precoMin: req.query.precoMin || null,
-      precoMax: req.query.precoMax || null,
-      ordenar: req.query.ordem || "nome"
-    };
-
-    const produtos = await produtoServices.getProdutos(filtros);
+    const produtos = await produtoServices.getProdutos();
     return res.status(200).json(produtos);
   } catch (err) {
     console.error("produtoController.getProdutos:", err);
     return res.status(500).json({ message: "Erro ao buscar produtos." });
+  }
+}
+
+
+async function getProduto(req, res) {
+  try {
+    const { id } = req.params;
+    const produto = await produtoServices.getProduto(id);
+    if (!produto) return res.status(404).json({ message: 'Produto não encontrado.' });
+    return res.status(200).json(produto);
+  } catch (err) {
+    console.error('produtoController.getProduto:', err);
+    return res.status(500).json({ message: 'Erro ao buscar produto.' });
   }
 }
 
@@ -96,12 +93,21 @@ async function deleteProduto(req, res) {
     return res.status(200).json(deletado);
   } catch (err) {
     console.error("produtoController.deleteProduto:", err);
-    return res.status(500).json({ message: "Erro ao remover produto." });
+
+    // Erros de regra de negócio
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ erro: err.message });
+    }
+
+    // Erros inesperados
+    return res.status(500).json({ erro: err.message });
   }
 }
 
+
 export default {
   getProdutos,
+  getProduto,
   createProduto,
   updateProduto,
   deleteProduto

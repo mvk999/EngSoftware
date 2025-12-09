@@ -29,6 +29,18 @@ async function getPedido(id, trx = null) {
   }
 }
 
+// (recomendado)
+async function getEnderecoIdByPedido(idPedido, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `SELECT endereco_id FROM pedidos WHERE id_pedido = $1;`;
+  try {
+    const q = await client.query(sql, [idPedido]);
+    return q.rows[0]?.endereco_id || null;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
 // =========================
 // Pedidos de um cliente
 // =========================
@@ -84,7 +96,7 @@ async function adicionarItemNoPedido(pedidoId, produtoId, quantidade, precoUnita
 }
 
 // =========================
-// Atualizar item do pedido
+// Atualizar item (não será muito usado)
 // =========================
 async function atualizarItemPedido(pedidoId, produtoId, quantidade, trx = null) {
   const client = trx || (await BD.conectar());
@@ -116,8 +128,42 @@ async function getItensPedido(pedidoId, trx = null) {
   }
 }
 
+// ========================================================
+// REMOVER TODOS OS ITENS DO PEDIDO (novo)
+// ========================================================
+async function removerTodosItensPedido(pedidoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `DELETE FROM itens_pedido WHERE id_pedido = $1;`;
+  try {
+    await client.query(sql, [pedidoId]);
+    return true;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+// ========================================================
+// ATUALIZAR VALOR TOTAL DO PEDIDO (novo)
+// ========================================================
+async function atualizarValorTotal(pedidoId, novoTotal, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET valor_total = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [novoTotal, pedidoId]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+
 // =========================
-// Atualizar status do pedido
+// Atualizar status
 // =========================
 async function atualizarStatus(idPedido, novoStatus, trx = null) {
   const client = trx || (await BD.conectar());
@@ -136,14 +182,13 @@ async function atualizarStatus(idPedido, novoStatus, trx = null) {
 }
 
 // =========================
-// Deletar pedido (cascata + repor estoque)
+// Deletar pedido
 // =========================
 async function deletarPedido(idPedido, trx = null) {
   const client = trx || (await BD.conectar());
 
   const itens = await getItensPedido(idPedido, trx);
 
-  // Restaurar estoque
   for (let item of itens) {
     await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
   }
@@ -158,21 +203,81 @@ async function deletarPedido(idPedido, trx = null) {
 }
 
 // =========================
+// Atualizar endereço do pedido
+// =========================
+async function atualizarEndereco(pedidoId, enderecoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET endereco_id = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [enderecoId, pedidoId]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+// =========================
+// Atualizar cliente
+// =========================
+async function atualizarCliente(pedidoId, clienteId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    UPDATE pedidos
+    SET id_cliente = $1
+    WHERE id_pedido = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [clienteId, pedidoId]);
+    return q.rows[0];
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+// =========================
 // Transações
 // =========================
 async function transaction(cb) {
   return BD.transaction(cb);
 }
 
+async function removerItemPedido(pedidoId, produtoId, trx = null) {
+  const client = trx || (await BD.conectar());
+  const sql = `
+    DELETE FROM itens_pedido
+    WHERE id_pedido = $1 AND id_produto = $2
+    RETURNING *;
+  `;
+  try {
+    const q = await client.query(sql, [pedidoId, produtoId]);
+    return q.rows[0] || null;
+  } finally {
+    if (!trx) client.release();
+  }
+}
+
+
 export default {
   getAllPedidos,
   getPedido,
+  getEnderecoIdByPedido,
   getPedidosByCliente,
   criarPedido,
   adicionarItemNoPedido,
   atualizarItemPedido,
   getItensPedido,
+  removerTodosItensPedido, 
+  atualizarValorTotal,    
   atualizarStatus,
   deletarPedido,
-  transaction
+  atualizarEndereco,
+  atualizarCliente,
+  transaction,
+  removerItemPedido
 };

@@ -1,45 +1,46 @@
-// routes/enderecoRoute.js
 import express from "express";
 import enderecoController from "../controllers/enderecoController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validateId from "../middlewares/validateIdMiddleware.js";
 import errorBoundary from "../middlewares/errorBoundary.js";
+import adminMiddleware from "../middlewares/adminMiddleware.js";
 
 const router = express.Router();
 
 /**
  * Rotas de Endereço
- * Todas exigem autenticação (cada usuário só gerencia seu próprio endereço)
+ * Todas exigem autenticação
  */
 
-// Lista TODOS os endereços do usuário autenticado
+// Lista todos do usuário autenticado
 router.get(
-    "/",
-    authMiddleware,
-    errorBoundary(enderecoController.listarEnderecos)
+  "/me",
+  authMiddleware,
+  errorBoundary(enderecoController.getMeusEnderecos)
 );
 
-// Busca endereço específico
+// ADMIN: listar endereços de um cliente por ID
 router.get(
-    "/:id",
-    authMiddleware,
-    validateId("id"),
-    errorBoundary(enderecoController.getEndereco)
+  "/admin/cliente/:id/enderecos",
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(enderecoController.getEnderecosByCliente)
+);
+
+// Buscar endereço específico
+router.get(
+  "/:id",
+  authMiddleware,
+  validateId("id"),
+  errorBoundary(enderecoController.getEndereco)
 );
 
 // Criar novo endereço
 router.post(
-    "/",
-    authMiddleware,
-    errorBoundary(enderecoController.criarEndereco)
-);
-
-// Atualizar endereço
-router.put(
-    "/:id",
-    authMiddleware,
-    validateId("id"),
-    errorBoundary(enderecoController.atualizarEndereco)
+  "/",
+  authMiddleware,
+  errorBoundary(enderecoController.criarEndereco)
 );
 
 export default router;

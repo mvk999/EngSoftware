@@ -146,7 +146,21 @@ function Produtos() {
       if (modoModal === 'editar') {
         // PUT /produto/{id}
         const id = form.id;
-        await axios.put(`${API_BASE_URL}/produto/${id}`, payload, config);
+
+        // Se há um arquivo de imagem (File), envie como FormData
+        if (form.imagem instanceof File) {
+          const fd = new FormData();
+          fd.append('nome', payload.nome);
+          fd.append('descricao', payload.descricao || '');
+          fd.append('preco', String(payload.preco));
+          fd.append('estoque', String(payload.estoque));
+          fd.append('idCategoria', String(payload.idCategoria));
+          fd.append('imagem', form.imagem);
+
+          await axios.put(`${API_BASE_URL}/produto/${id}`, fd, config);
+        } else {
+          await axios.put(`${API_BASE_URL}/produto/${id}`, payload, config);
+        }
 
         // Atualiza lista local sem perder o restante dos dados
         setProdutos((prev) =>
@@ -157,7 +171,21 @@ function Produtos() {
         alert("Produto atualizado com sucesso.");
       } else {
         // POST /produto
-        const resp = await axios.post(`${API_BASE_URL}/produto`, payload, config);
+        let resp;
+        if (form.imagem instanceof File) {
+          const fd = new FormData();
+          fd.append('nome', payload.nome);
+          fd.append('descricao', payload.descricao || '');
+          fd.append('preco', String(payload.preco));
+          fd.append('estoque', String(payload.estoque));
+          fd.append('idCategoria', String(payload.idCategoria));
+          fd.append('imagem', form.imagem);
+
+          resp = await axios.post(`${API_BASE_URL}/produto`, fd, config);
+        } else {
+          resp = await axios.post(`${API_BASE_URL}/produto`, payload, config);
+        }
+
         // Backend deve devolver o produto criado com id
         const novoProduto = resp.data;
 
@@ -242,7 +270,7 @@ function Produtos() {
       <div className="prod-content-categorias">
         <div className="prod-top-content-categorias">
           <img src="/src/assets/Avatar.svg" alt="Avatar" />
-          <button className="prod-button-admin" data-testid="prod-btn-admin">Admin</button>
+          <button id="btn-admin" className="prod-button-admin" data-testid="prod-btn-admin">Admin</button>
           <img src="/src/assets/ShopCart.svg" alt="Shop Cart" />
         </div>
 
@@ -256,6 +284,7 @@ function Produtos() {
         {/* Botão para abrir modal de cadastro */}
         <button
           className="prod-button-admin"
+          id="btn-cadastrar-produto"
           data-testid="prod-btn-open-cadastrar"
           onClick={handleAbrirModalCadastrar}
           style={{ marginTop: '20px' }}

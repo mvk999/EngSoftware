@@ -65,7 +65,7 @@ router.put(
   authMiddleware,
   adminMiddleware,
   validateId("id"),
-  errorBoundary(pedidoController.atualizarPedido) // Aqui vamos processar o status, os itens e o estoque
+  errorBoundary(pedidoController.atualizarPedido)
 );
 
 // Cancelar pedido — ADMIN
