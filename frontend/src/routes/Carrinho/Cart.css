@@ -79,6 +79,18 @@
 .total-pill{background:var(--accent);padding:12px 18px;border-radius:10px;font-weight:600}
 .buy-btn{flex:1;background:var(--accent);border:none;padding:12px;border-radius:10px;font-weight:600;cursor:pointer}
 
+/* Address selector styles */
+.address-list{margin-bottom:12px}
+.address-list-title{color:var(--muted);font-size:16px;margin:0 0 8px 0}
+.address-grid{display:flex;flex-direction:column;gap:10px}
+.address-card{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:10px;background:var(--card-bg);border:1px solid transparent}
+.address-card .addr-line{color:var(--muted);font-size:13px}
+.address-card .address-actions{display:flex;gap:8px}
+.select-addr-btn{background:transparent;border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:8px;cursor:pointer}
+.select-addr-btn:hover{background:rgba(255,200,49,0.08)}
+.address-card.selected{border-color:var(--accent);box-shadow:0 4px 16px rgba(255,200,49,0.06)}
+
+
 /* small helpers to keep spacing similar to design */
 .cart-left .cart-top{height:36px}
 

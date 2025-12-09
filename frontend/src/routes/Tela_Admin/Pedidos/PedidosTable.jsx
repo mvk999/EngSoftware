@@ -118,6 +118,7 @@ function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
             <TableBody>
               {currentRows.map((row, index) => (
                 <TableRow
+                  id={row.idPedido ? `row-pedido-${row.idPedido}` : undefined}
                   key={row.idPedido}
                   sx={{
                     backgroundColor: '#191922',
@@ -154,6 +155,7 @@ function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
                             }}
                           >
                             <button
+                              id={row.idPedido ? `btn-pedido-editar-${row.idPedido}` : undefined}
                               style={{
                                 background: 'none',
                                 border: 'none',
@@ -178,6 +180,7 @@ function PedidosTable({ pedidos, onEditarPedido, onDeletePedido }) {
                             </button>
 
                             <button
+                              id={row.idPedido ? `btn-pedido-cancelar-${row.idPedido}` : undefined}
                               style={{
                                 background: 'none',
                                 border: 'none',

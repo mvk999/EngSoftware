@@ -109,7 +109,8 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
               {currentRows.map((row, index) => (
                 <TableRow
                     key={row.id || index}
-                    data-testid={row.id ? `prod-row-${row.id}` : undefined}
+                id={row.id ? `row-produto-${row.id}` : undefined}
+                data-testid={row.id ? `prod-row-${row.id}` : undefined}
                     sx={{
                       backgroundColor: '#191922',
                       borderBottom:
@@ -165,11 +166,10 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
                                 color: '#FFC831',
                                 transition: 'opacity 0.2s',
                               }}
+                              id={row.id ? `btn-produtos-editar-${row.id}` : undefined}
                               title="Editar"
                               data-testid={row.id ? `prod-edit-${row.id}` : undefined}
-                              onClick={() =>
-                                onEditarProduto && onEditarProduto(row)
-                              }
+                              onClick={() => onEditarProduto && onEditarProduto(row)}
                             >
                               <EditIcon sx={{ width: 20, height: 20 }} />
                             </button>
@@ -186,11 +186,10 @@ function ProdutoTable({ produtos = [], onEditarProduto, onDeleteProduto }) {
                                 color: '#FFC831',
                                 transition: 'opacity 0.2s',
                               }}
+                              id={row.id ? `btn-produtos-deletar-${row.id}` : undefined}
                               title="Deletar"
                               data-testid={row.id ? `prod-delete-${row.id}` : undefined}
-                              onClick={() =>
-                                onDeleteProduto && onDeleteProduto(row.id)
-                              }
+                              onClick={() => onDeleteProduto && onDeleteProduto(row.id)}
                             >
                               <DeleteIcon sx={{ width: 20, height: 20 }} />
                             </button>

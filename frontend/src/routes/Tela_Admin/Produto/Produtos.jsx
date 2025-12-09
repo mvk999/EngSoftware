@@ -270,7 +270,7 @@ function Produtos() {
       <div className="prod-content-categorias">
         <div className="prod-top-content-categorias">
           <img src="/src/assets/Avatar.svg" alt="Avatar" />
-          <button className="prod-button-admin" data-testid="prod-btn-admin">Admin</button>
+          <button id="btn-admin" className="prod-button-admin" data-testid="prod-btn-admin">Admin</button>
           <img src="/src/assets/ShopCart.svg" alt="Shop Cart" />
         </div>
 
@@ -284,6 +284,7 @@ function Produtos() {
         {/* Botão para abrir modal de cadastro */}
         <button
           className="prod-button-admin"
+          id="btn-cadastrar-produto"
           data-testid="prod-btn-open-cadastrar"
           onClick={handleAbrirModalCadastrar}
           style={{ marginTop: '20px' }}

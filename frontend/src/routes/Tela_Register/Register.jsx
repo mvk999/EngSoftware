@@ -64,6 +64,7 @@ export default function Register() {
 
           <label className="label">Nome</label>
           <input
+            id="input-register-nome"
             type="text"
             placeholder="Seu nome completo"
             value={nome}
@@ -73,6 +74,7 @@ export default function Register() {
 
           <label className="label">Email</label>
           <input
+            id="input-register-email"
             type="email"
             placeholder="exemplo@gmail.com"
             value={email}
@@ -82,6 +84,7 @@ export default function Register() {
 
           <label className="label">CPF</label>
           <input
+            id="input-register-cpf"
             type="text"
             placeholder="000.000.000-00"
             value={cpf}
@@ -91,6 +94,7 @@ export default function Register() {
 
           <label className="label">Senha</label>
           <input
+            id="input-register-senha"
             type="password"
             placeholder="********"
             value={senha}
@@ -100,6 +104,7 @@ export default function Register() {
 
           <label className="label">Confirmar Senha</label>
           <input
+            id="input-register-confirmar"
             type="password"
             placeholder="********"
             value={confirmar}
@@ -107,7 +112,7 @@ export default function Register() {
             required
           />
 
-          <button className="btn-login" type="submit" disabled={loading}>
+          <button id="btn-register" className="btn-login" type="submit" disabled={loading}>
             {loading ? "Cadastrando..." : "CADASTRAR →"}
           </button>
 

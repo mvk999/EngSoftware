@@ -41,8 +41,23 @@ async function getMeusEnderecos(req, res) {
   }
 }
 
+// ADMIN: listar endereços de um cliente por ID (protegido por adminMiddleware na rota)
+async function getEnderecosByCliente(req, res) {
+  try {
+    const { id } = req.params;
+    const enderecos = await enderecoService.getEnderecosDoUsuario(Number(id));
+    return res.status(200).json(enderecos);
+  } catch (err) {
+    console.error("enderecoController.getEnderecosByCliente:", err);
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+    return res.status(500).json({ message: "Erro ao listar endereços do cliente." });
+  }
+}
+
 export default {
   criarEndereco,
   getEndereco,
-  getMeusEnderecos
+  getMeusEnderecos,
+  getEnderecosByCliente
 };

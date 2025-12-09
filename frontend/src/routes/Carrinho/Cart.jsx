@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Cart.css'
+import AddressSelector from './AddressSelector'
 import axios from 'axios'
 import { getToken } from '../../utils/auth'
 
@@ -20,6 +21,9 @@ export default function Cart() {
     cidade: '',
     estado: ''
   })
+  const [addresses, setAddresses] = useState([])
+  const [loadingAddresses, setLoadingAddresses] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -243,6 +247,23 @@ export default function Cart() {
     }
 
     fetchCart()
+    // fetch saved addresses for authenticated user
+    async function fetchAddresses() {
+      try {
+        const token = getToken()
+        if (!token) return
+        setLoadingAddresses(true)
+        const config = { headers: { Authorization: `Bearer ${token}` } }
+        const resp = await axios.get(`${API_BASE_URL}/endereco/me`, config)
+        const list = Array.isArray(resp.data) ? resp.data : (resp.data?.enderecos ?? resp.data?.data ?? [])
+        if (mounted) setAddresses(list)
+      } catch (e) {
+        console.warn('Não foi possível carregar endereços salvos', e)
+      } finally {
+        if (mounted) setLoadingAddresses(false)
+      }
+    }
+    fetchAddresses()
     return () => {
       mounted = false
     }
@@ -287,7 +308,7 @@ export default function Cart() {
       <div className="cart-container">
         <div className="cart-left">
           <div className="cart-top">
-            <button className="back-btn" onClick={() => navigate('/')}>‹ Continue as compras</button>
+            <button id="btn-cart-back" className="back-btn" onClick={() => navigate('/')}>‹ Continue as compras</button>
           </div>
 
           <h2 className="cart-title">Carrinho de Compras</h2>
@@ -302,7 +323,7 @@ export default function Cart() {
               const pid = Number(prod.idProduto)
               const precoNum = Number(prod.preco) || 0
               return (
-                  <div className="cart-item" key={Number.isFinite(pid) ? pid : `noid-${idx}`}>
+                  <div className="cart-item" id={Number.isFinite(pid) ? `row-cart-item-${pid}` : undefined} key={Number.isFinite(pid) ? pid : `noid-${idx}`}>
                   <div className={"item-image" + (prod.imagemUrl ? '' : ' placeholder')}>
                     {prod.imagemUrl ? (
                       <img className="product-card__image" src={prod.imagemUrl} alt={prod.nome} />
@@ -320,14 +341,14 @@ export default function Cart() {
                     <div className="item-name">{prod.nome}</div>
                     <div className="item-controls">
                                 <div className="qty-controls">
-                                  <button disabled={!hasAnyRawId(prod)} onClick={() => {
+                                  <button id={Number.isFinite(pid) ? `btn-cart-decrease-${pid}` : undefined} disabled={!hasAnyRawId(prod)} onClick={() => {
                                     console.log('decrease click pid=', pid, 'currentQty=', prod.quantidade)
                                     const newQ = Math.max(1, Number(prod.quantidade) - 1)
                                     if (!hasAnyRawId(prod)) return
                                     updateQuantity(pid, newQ)
                                   }}>-</button>
-                                  <div className="item-qty">{prod.quantidade}</div>
-                                  <button disabled={!hasAnyRawId(prod)} onClick={() => {
+                                  <div id={Number.isFinite(pid) ? `span-cart-qty-${pid}` : undefined} className="item-qty">{prod.quantidade}</div>
+                                  <button id={Number.isFinite(pid) ? `btn-cart-increase-${pid}` : undefined} disabled={!hasAnyRawId(prod)} onClick={() => {
                                     console.log('increase click pid=', pid, 'currentQty=', prod.quantidade)
                                     const next = Number(prod.quantidade) + 1
                                     if (!hasAnyRawId(prod)) return
@@ -341,7 +362,7 @@ export default function Cart() {
                       <div className="item-price">{precoNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                     </div>
                   </div>
-                  <button className="item-trash" disabled={!hasAnyRawId(prod)} onClick={() => !hasAnyRawId(prod) ? alert('Produto sem id — operação não disponível.') : (console.log('remove click pid=', pid), removeItem(pid))}>🗑</button>
+                  <button id={Number.isFinite(pid) ? `btn-cart-remove-${pid}` : undefined} className="item-trash" disabled={!hasAnyRawId(prod)} onClick={() => !hasAnyRawId(prod) ? alert('Produto sem id — operação não disponível.') : (console.log('remove click pid=', pid), removeItem(pid))}>🗑</button>
                 </div>
               )
             })
@@ -351,37 +372,48 @@ export default function Cart() {
 
         <aside className="cart-right">
           <h3 className="right-title">Dados de Endereço</h3>
+          {/* Address selector: saved addresses + choice */}
+          {loadingAddresses ? (
+            <div style={{color:'#CACACA'}}>Carregando endereços...</div>
+          ) : (
+            <AddressSelector addresses={addresses} selectedId={selectedAddressId} onSelect={(a) => {
+              const id = a.id_endereco ?? a.id ?? a.idEndereco
+              setSelectedAddressId(id)
+              setEndereco({ cep: a.cep || '', rua: a.rua || '', numero: a.numero || '', bairro: a.bairro || '', cidade: a.cidade || '', estado: a.estado || '' })
+            }} />
+          )}
+
           <div className="card-field">
             <label>CEP</label>
-            <input placeholder="00000-000" value={endereco.cep} onChange={e => setEndereco(prev => ({ ...prev, cep: e.target.value }))} />
+            <input id="input-cart-cep" placeholder="00000-000" value={endereco.cep} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, cep: e.target.value })) }} />
           </div>
 
           <div className="two-cols">
             <div className="card-field">
               <label>Rua</label>
-              <input placeholder="Nome da rua" value={endereco.rua} onChange={e => setEndereco(prev => ({ ...prev, rua: e.target.value }))} />
+              <input id="input-cart-rua" placeholder="Nome da rua" value={endereco.rua} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, rua: e.target.value })) }} />
             </div>
             <div className="card-field">
               <label>Número</label>
-              <input placeholder="Número" value={endereco.numero} onChange={e => setEndereco(prev => ({ ...prev, numero: e.target.value }))} />
+              <input id="input-cart-numero" placeholder="Número" value={endereco.numero} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, numero: e.target.value })) }} />
             </div>
           </div>
 
           <div className="two-cols">
             <div className="card-field">
               <label>Bairro</label>
-              <input placeholder="Bairro" value={endereco.bairro} onChange={e => setEndereco(prev => ({ ...prev, bairro: e.target.value }))} />
+              <input id="input-cart-bairro" placeholder="Bairro" value={endereco.bairro} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, bairro: e.target.value })) }} />
             </div>
           </div>
 
           <div className="two-cols">
             <div className="card-field">
               <label>Cidade</label>
-              <input placeholder="Cidade" value={endereco.cidade} onChange={e => setEndereco(prev => ({ ...prev, cidade: e.target.value }))} />
+              <input id="input-cart-cidade" placeholder="Cidade" value={endereco.cidade} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, cidade: e.target.value })) }} />
             </div>
             <div className="card-field">
-              <label>Estado</label>
-              <input placeholder="UF" value={endereco.estado} onChange={e => setEndereco(prev => ({ ...prev, estado: e.target.value }))} />
+                <label>Estado</label>
+                <input id="input-cart-estado" placeholder="UF" value={endereco.estado} onChange={e => { setSelectedAddressId(null); setEndereco(prev => ({ ...prev, estado: e.target.value })) }} />
             </div>
           </div>
 
@@ -391,7 +423,7 @@ export default function Cart() {
               <span>{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
             </div>
             <div className="checkout-row">
-            <button className="buy-btn" disabled={submitting || items.length === 0} onClick={async () => {
+            <button id="btn-cart-checkout" className="buy-btn" disabled={submitting || items.length === 0} onClick={async () => {
               // validate required fields
               const required = ['rua','numero','bairro','cidade','estado','cep']
               for (const k of required) {
@@ -404,25 +436,26 @@ export default function Cart() {
               try {
                 const token = getToken()
                 const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-                // First: create endereco in backend (required by /pedido)
-                const enderecoPayload = {
-                  rua: endereco.rua,
-                  numero: endereco.numero,
-                  bairro: endereco.bairro,
-                  cidade: endereco.cidade,
-                  estado: endereco.estado,
-                  cep: endereco.cep
-                }
-                const enderecoResp = await axios.post(`${API_BASE_URL}/endereco`, enderecoPayload, config)
-                const enderecoCriado = enderecoResp.data
-                console.log('enderecoResp.data =', enderecoCriado)
-                // backend may return the created row directly or wrap it ({ endereco: {...} })
-                const maybe = enderecoCriado?.endereco ?? enderecoCriado
-                const id_endereco = maybe?.id_endereco ?? maybe?.id ?? maybe?.idEndereco ?? null
+                // If an address was selected from saved addresses, use it; otherwise create a new address first
+                let id_endereco = selectedAddressId
                 if (!id_endereco) {
-                  console.error('ID do endereco não encontrado na resposta', enderecoResp.data)
-                  alert('Erro ao criar endereço: resposta inesperada do servidor. Verifique o console.')
-                  return
+                  const enderecoPayload = {
+                    rua: endereco.rua,
+                    numero: endereco.numero,
+                    bairro: endereco.bairro,
+                    cidade: endereco.cidade,
+                    estado: endereco.estado,
+                    cep: endereco.cep
+                  }
+                  const enderecoResp = await axios.post(`${API_BASE_URL}/endereco`, enderecoPayload, config)
+                  const enderecoCriado = enderecoResp.data
+                  const maybe = enderecoCriado?.endereco ?? enderecoCriado
+                  id_endereco = maybe?.id_endereco ?? maybe?.id ?? maybe?.idEndereco ?? null
+                  if (!id_endereco) {
+                    console.error('ID do endereco não encontrado na resposta', enderecoResp.data)
+                    alert('Erro ao criar endereço: resposta inesperada do servidor. Verifique o console.')
+                    return
+                  }
                 }
 
                 // Then create pedido using enderecoId (send multiple keys to be compatible)

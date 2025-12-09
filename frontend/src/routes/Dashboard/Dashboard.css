@@ -108,6 +108,7 @@
     background-color: transparent;
     margin:0;
     padding: 0;
+    cursor:pointer;
 }
 
 .navbar__search-input {

@@ -39,6 +39,7 @@ function NavBarAdmin() {
             </button>
             <button
               className="BotaoNavBar"
+              id="btn-produto"
               onClick={() => navigate("/produtos")}
             >
               <img className="IconNav" src={IconNav} alt="Icon" />

@@ -3,6 +3,7 @@ import enderecoController from "../controllers/enderecoController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import validateId from "../middlewares/validateIdMiddleware.js";
 import errorBoundary from "../middlewares/errorBoundary.js";
+import adminMiddleware from "../middlewares/adminMiddleware.js";
 
 const router = express.Router();
 
@@ -16,6 +17,15 @@ router.get(
   "/me",
   authMiddleware,
   errorBoundary(enderecoController.getMeusEnderecos)
+);
+
+// ADMIN: listar endereços de um cliente por ID
+router.get(
+  "/admin/cliente/:id/enderecos",
+  authMiddleware,
+  adminMiddleware,
+  validateId("id"),
+  errorBoundary(enderecoController.getEnderecosByCliente)
 );
 
 // Buscar endereço específico

@@ -13,8 +13,6 @@ const API_BASE_URL = 'http://localhost:3000';
 
 function Pedidos() {
   const [pedidos, setPedidos] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
-  const [enderecos, setEnderecos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [autorizado, setAutorizado] = useState(true);
 
@@ -22,8 +20,6 @@ function Pedidos() {
   const [modoModal, setModoModal] = useState('editar'); // 'editar' ou 'cadastrar'
 
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
-  const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
 
   // Pega token JWT do localStorage (configura Authorization header)
   const getConfig = () => {
@@ -48,8 +44,6 @@ function Pedidos() {
         const resp = await axios.get(`${API_BASE_URL}/pedido/${pedido.idPedido}`, config || {});
         const dados = resp.data || resp;
         setPedidoSelecionado(dados);
-        setUsuarioSelecionado(null);
-        setEnderecoSelecionado(null);
         setModoModal('editar');
         setShowModal(true);
       } catch (err) {
@@ -64,13 +58,9 @@ function Pedidos() {
   
   // Abrir modal para CADASTRAR novo pedido + novo cliente + novo endereço
   // criação de pedidos não é permitida via admin UI — apenas edição
-  const handleAbrirModalCadastrar = () => {
-    // não faz nada
-    alert('Criação de pedidos não é permitida aqui. Use o fluxo do cliente para criar pedidos.');
-  };
 
   // Confirmar modal: recebe pedido e apenas IDs de cliente/endereco
-  const handleConfirmarModal = ({ pedido, clienteId, enderecoId, modo }) => {
+  const handleConfirmarModal = ({ pedido, clienteId, enderecoId, modo, itens, removerItens, endereco }) => {
     // integração com backend: PUT /pedido/{id} para editar, POST /pedido para criar
     const config = getConfig();
     (async () => {
@@ -98,6 +88,21 @@ function Pedidos() {
           if (statusVal !== undefined && statusVal !== '') payload.status = statusVal;
           const valorTotalVal = safeNumber(pedido?.valorTotal ?? pedido?.valor_total ?? pedido?.total);
           if (valorTotalVal !== undefined) payload.valorTotal = valorTotalVal;
+
+          // include itens and removerItens if modal provided them (either top-level or inside pedido)
+          const itensFromModal = Array.isArray(itens) && itens.length > 0 ? itens : (Array.isArray(pedido?.itens) ? pedido.itens : [])
+          const removerFromModal = Array.isArray(removerItens) && removerItens.length > 0 ? removerItens : (Array.isArray(pedido?.removerItens) ? pedido.removerItens : [])
+          if (itensFromModal.length > 0) {
+            payload.itens = itensFromModal.map(it => ({ idProduto: it.idProduto ?? it.id_produto ?? it.id, quantidade: it.quantidade }))
+          }
+          if (removerFromModal.length > 0) {
+            payload.removerItens = removerFromModal.map(it => ({ idProduto: it.idProduto ?? it.id_produto ?? it.id }))
+          }
+          // include endereco object when present (admin edited address fields)
+          const enderecoFromModal = endereco ?? pedido?.endereco ?? null
+          if (enderecoFromModal) {
+            payload.endereco = enderecoFromModal
+          }
 
           // Send update and use returned object to update local state
           let resp = await axios.put(`${API_BASE_URL}/pedido/${id}`, payload, config || {});
@@ -134,8 +139,6 @@ function Pedidos() {
 
         setShowModal(false);
         setPedidoSelecionado(null);
-        setUsuarioSelecionado(null);
-        setEnderecoSelecionado(null);
       } catch (err) {
         console.error('Erro ao salvar pedido:', err);
         alert(err.response?.data?.erro || 'Erro ao salvar pedido.');
@@ -146,8 +149,6 @@ function Pedidos() {
   const handleFecharModal = () => {
     setShowModal(false);
     setPedidoSelecionado(null);
-    setUsuarioSelecionado(null);
-    setEnderecoSelecionado(null);
   };
   const handleDeletePedido = async (idPedido) => {
     try {
