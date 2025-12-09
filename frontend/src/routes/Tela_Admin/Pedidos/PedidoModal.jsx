@@ -27,6 +27,9 @@ function PedidoModal({
   const [manualEnderecoId, setManualEnderecoId] = useState('')
 
   const [items, setItems] = useState([]) // itens do pedido: { idProduto, quantidade, nome, precoUnitario, remover }
+  const [produtosDisponiveis, setProdutosDisponiveis] = useState([])
+  const [produtoToAddId, setProdutoToAddId] = useState('')
+  const [produtoToAddQty, setProdutoToAddQty] = useState(1)
 
   useEffect(() => {
     if (isOpen) {
@@ -99,6 +102,44 @@ function PedidoModal({
       }
     }
   }, [isOpen, pedido]);
+
+  // fetch product list when modal opens (frontend-only; backend has /produto)
+  useEffect(() => {
+    if (!isOpen) return;
+    (async () => {
+      try {
+        const token = getToken();
+        const resp = await axios.get(`${API_BASE_URL}/produto`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const raw = Array.isArray(resp.data) ? resp.data : (Array.isArray(resp.data?.rows) ? resp.data.rows : []);
+        setProdutosDisponiveis(raw || []);
+
+        // Build quick lookup by possible id keys (id_produto, idProduto, id)
+        const prodMap = new Map();
+        raw.forEach(p => {
+          const pid = p.id_produto ?? p.idProduto ?? p.id;
+          if (pid === undefined || pid === null) return;
+          prodMap.set(String(pid), p);
+        });
+
+        // Enrich existing items (coming from pedido) with nome and precoUnitario when missing
+        setItems(prev => prev.map(it => {
+          const key = String(it.idProduto ?? it.id_produto ?? it.id ?? it.produto_id ?? '');
+          const prod = prodMap.get(key);
+          if (!prod) return it;
+          const nomeFromProd = prod.nome ?? prod.nome_produto ?? prod.productName ?? prod.name;
+          const precoFromProd = prod.preco ?? prod.preco_unitario ?? prod.precoUnitario ?? prod.precoUnit;
+          return {
+            ...it,
+            nome: it.nome && it.nome !== '' ? it.nome : (nomeFromProd ?? `Produto ${key}`),
+            precoUnitario: (it.precoUnitario !== undefined && it.precoUnitario !== null && it.precoUnitario !== '') ? it.precoUnitario : (Number(precoFromProd) || 0),
+          };
+        }));
+      } catch (err) {
+        console.warn('Falha ao carregar produtos para adicionar ao pedido:', err?.message || err);
+        setProdutosDisponiveis([]);
+      }
+    })();
+  }, [isOpen]);
 
   const changePedido = (field) => (e) =>
     setPedidoForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -251,6 +292,42 @@ function PedidoModal({
           )}
 
           {/* Itens do pedido: permite alterar quantidade e marcar remoção */}
+          {/* Adicionar produto existente ao pedido */}
+          <div style={{width:'100%',marginTop:12}}>
+            <h3 className="prod-input-label">Adicionar Produto</h3>
+            <div style={{display:'flex',gap:8,alignItems:'center',marginTop:8}}>
+              <select id="select-pedido-add-produto" className="prod-input" value={produtoToAddId} onChange={(e) => setProdutoToAddId(e.target.value)}>
+                <option value="">-- Selecione um produto --</option>
+                {produtosDisponiveis.map(p => {
+                  const id = p.id_produto ?? p.idProduto ?? p.id;
+                  const nome = p.nome ?? p.nome_produto ?? p.productName ?? `Produto ${id}`;
+                  const preco = p.preco ?? p.preco_unitario ?? p.precoUnitario ?? 0;
+                  return <option key={id} value={id}>{`${nome} — ${Number(preco).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`}</option>
+                })}
+              </select>
+              <input id="input-pedido-add-quantidade" className="prod-input" style={{width:90}} type="number" min={1} value={produtoToAddQty} onChange={(e) => setProdutoToAddQty(Math.max(1, Number(e.target.value) || 1))} />
+              <button id="btn-pedido-add-produto" type="button" className="prod-btn-confirm" onClick={() => {
+                if (!produtoToAddId) { alert('Selecione um produto para adicionar'); return }
+                const prod = produtosDisponiveis.find(pp => String(pp.id_produto ?? pp.idProduto ?? pp.id) === String(produtoToAddId));
+                if (!prod) { alert('Produto não encontrado'); return }
+                const id = prod.id_produto ?? prod.idProduto ?? prod.id;
+                const nome = prod.nome ?? prod.nome_produto ?? prod.productName ?? `Produto ${id}`;
+                const preco = prod.preco ?? prod.preco_unitario ?? prod.precoUnitario ?? 0;
+                setItems(prev => {
+                  const clone = [...prev];
+                  const existingIdx = clone.findIndex(it => String(it.idProduto) === String(id));
+                  if (existingIdx >= 0) {
+                    clone[existingIdx].quantidade = Number(clone[existingIdx].quantidade || 0) + Number(produtoToAddQty || 1);
+                  } else {
+                    clone.push({ idProduto: id, quantidade: Number(produtoToAddQty || 1), nome, precoUnitario: preco, remover: false })
+                  }
+                  return clone;
+                });
+                // reset selector
+                setProdutoToAddId(''); setProdutoToAddQty(1);
+              }}>Adicionar</button>
+            </div>
+          </div>
           <div style={{width:'100%'}}>
             <h3 className="prod-input-label">Itens do Pedido</h3>
             <div style={{display:'flex',flexDirection:'column',gap:10,marginTop:8}}>
