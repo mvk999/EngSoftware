@@ -84,7 +84,6 @@ async function criarPedido(req, res) {
     return res.status(500).json({ message: "Erro ao criar pedido." });
   }
 }
-
 // =========================
 // ADMIN — atualizar status
 // =========================
@@ -93,27 +92,14 @@ async function atualizarStatus(req, res) {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validos = [
-      "pendente",
-      "processando",
-      "enviado",
-      "entregue",
-      "cancelado"
-    ];
-
-    if (!validos.includes(status)) {
-      return res.status(400).json({
-        message: "Status inválido. Utilize: " + validos.join(", ")
-      });
+    if (!status) {
+      return res.status(400).json({ message: "Status é obrigatório." });
     }
 
-    const atualizado = await pedidoService.atualizarStatus(
-      id,
-      status,
-      req.user.id // admin responsável
-    );
+    const atualizado = await pedidoService.atualizarStatus(id, status);
 
     return res.status(200).json(atualizado);
+
   } catch (err) {
     console.error("pedidoController.atualizarStatus:", err);
 
@@ -123,6 +109,42 @@ async function atualizarStatus(req, res) {
     return res.status(500).json({ message: "Erro ao atualizar status." });
   }
 }
+
+// =========================
+// ADMIN — atualizar status
+// =========================
+async function atualizarPedido(req, res) {
+  try {
+    const { id } = req.params;
+
+    const {
+      status,
+      clienteId,
+      enderecoId,
+      endereco,      
+      itens          
+    } = req.body;
+
+    const atualizado = await pedidoService.atualizarPedido(id, {
+      status,
+      clienteId,
+      enderecoId,
+      endereco,
+      itens
+    });
+
+    return res.status(200).json(atualizado);
+
+  } catch (err) {
+    console.error("pedidoController.atualizarPedido:", err);
+
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+
+    return res.status(500).json({ message: "Erro ao atualizar pedido." });
+  }
+}
+
 
 // =========================
 // CLIENTE — cancelar pedido próprio
@@ -224,28 +246,6 @@ async function deletarPedido(req, res) {
       return res.status(err.statusCode).json({ message: err.message });
 
     return res.status(500).json({ message: "Erro ao deletar pedido." });
-  }
-}
-async function atualizarPedido(req, res) {
-  try {
-    const { id } = req.params;
-    const { status, enderecoId, clienteId } = req.body;
-
-    const atualizado = await pedidoService.atualizarPedido(id, {
-      status,
-      enderecoId,
-      clienteId
-    });
-
-    return res.status(200).json(atualizado);
-
-  } catch (err) {
-    console.error("pedidoController.atualizarPedido:", err);
-
-    if (err instanceof AppError)
-      return res.status(err.statusCode).json({ message: err.message });
-
-    return res.status(500).json({ message: "Erro ao atualizar pedido." });
   }
 }
 

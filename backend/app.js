@@ -22,20 +22,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// AS ROTAS DEVEM SER REGISTRADAS SEMPRE (test ou não)
+// AS ROTAS
 const uploadsPath = path.join(__dirname, "docs_backend", "uploads");
 app.use("/uploads", express.static(uploadsPath));
 
 // ROTAS PRINCIPAIS
 app.use("/", router);
 
-// Swagger (não atrapalha os testes)
+// Swagge
 swaggerDocs(app);
 
 // Tratamento global de erros
 app.use(errorHandler);
 
-// SERVIDOR (só roda fora do teste)
+// SERVIDOR
 
 export async function startServer() {
     try {

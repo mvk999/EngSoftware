@@ -28,7 +28,21 @@ async function getEndereco(req, res) {
   }
 }
 
+async function getMeusEnderecos(req, res) {
+  try {
+    const usuarioId = req.user.id;
+    const enderecos = await enderecoService.getEnderecosDoUsuario(usuarioId);
+    return res.status(200).json(enderecos);
+  } catch (err) {
+    console.error("enderecoController.getMeusEnderecos:", err);
+    if (err instanceof AppError)
+      return res.status(err.statusCode).json({ message: err.message });
+    return res.status(500).json({ message: "Erro ao listar endereços." });
+  }
+}
+
 export default {
   criarEndereco,
-  getEndereco
+  getEndereco,
+  getMeusEnderecos
 };

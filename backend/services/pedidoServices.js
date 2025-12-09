@@ -2,7 +2,7 @@ import pedidoRepository from "../repositories/pedidoRepository.js";
 import carrinhoRepository from "../repositories/carrinhoRepository.js";
 import clienteRepository from "../repositories/clienteRepository.js";
 import produtoRepository from "../repositories/produtoRepository.js";
-import enderecoRepository from "../repositories/enderecoRepository.js"; 
+import enderecoRepository from "../repositories/enderecoRepository.js";
 import db from "../repositories/bd.js";
 import { AppError } from "../utils/error.js";
 
@@ -11,16 +11,14 @@ import { AppError } from "../utils/error.js";
 // =========================
 async function getAllPedidos() {
   const pedidos = await pedidoRepository.getAllPedidos();
-  // Enriquecer cada pedido com informações de cliente e endereço (para uso no admin)
-  const pedidosEnriquecidos = await Promise.all(
+
+  return Promise.all(
     pedidos.map(async (p) => {
       const cliente = await clienteRepository.getCliente(p.id_cliente);
       const endereco = await enderecoRepository.getEndereco(p.endereco_id);
       return { ...p, cliente, endereco };
     })
   );
-
-  return pedidosEnriquecidos;
 }
 
 // =========================
@@ -33,9 +31,9 @@ async function getPedido(id) {
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   const itens = await pedidoRepository.getItensPedido(id);
-  // Enriquecer com cliente e endereço
   const cliente = await clienteRepository.getCliente(pedido.id_cliente);
   const endereco = await enderecoRepository.getEndereco(pedido.endereco_id);
+
   return { ...pedido, itens, cliente, endereco };
 }
 
@@ -47,12 +45,13 @@ async function getPedidosByCliente(clienteId) {
   if (!cliente) throw new AppError("Cliente não encontrado.", 404);
 
   const pedidos = await pedidoRepository.getPedidosByCliente(clienteId);
-  const pedidosComItens = [];
-  for (let pedido of pedidos) {
-    const itens = await pedidoRepository.getItensPedido(pedido.id_pedido);
-    pedidosComItens.push({ ...pedido, itens });
-  }
-  return pedidosComItens;
+
+  return Promise.all(
+    pedidos.map(async (p) => {
+      const itens = await pedidoRepository.getItensPedido(p.id_pedido);
+      return { ...p, itens };
+    })
+  );
 }
 
 // =========================
@@ -70,39 +69,40 @@ async function criarPedido(clienteId, enderecoId) {
     throw new AppError("Endereço não pertence ao cliente autenticado.", 403);
 
   const itensCarrinho = await carrinhoRepository.getCarrinho(clienteId);
-  if (!itensCarrinho || itensCarrinho.length === 0)
-    throw new AppError("Carrinho vazio.", 400);
+  if (!itensCarrinho.length) throw new AppError("Carrinho vazio.", 400);
 
-  // calcula total e valida estoque
   let total = 0;
   for (const item of itensCarrinho) {
     const produto = await produtoRepository.getProduto(item.id_produto);
+
     if (!produto) throw new AppError(`Produto ID ${item.id_produto} não encontrado.`, 404);
+
     if (produto.estoque < item.quantidade)
       throw new AppError(`Estoque insuficiente para ${produto.nome}`, 400);
+
     total += Number(produto.preco) * Number(item.quantidade);
   }
 
   return await db.transaction(async (trx) => {
-    // 1) criar pedido
     const pedido = await pedidoRepository.criarPedido(clienteId, total, enderecoId, trx);
 
-    // 2) adicionar itens e decrementar estoque
     const itensInseridos = [];
     for (const item of itensCarrinho) {
       const produto = await produtoRepository.getProduto(item.id_produto, trx);
-      const itemInserido = await pedidoRepository.adicionarItemNoPedido(
+
+      const novoItem = await pedidoRepository.adicionarItemNoPedido(
         pedido.id_pedido,
         produto.id_produto,
         item.quantidade,
         produto.preco,
         trx
       );
-      itensInseridos.push(itemInserido);
+
+      itensInseridos.push(novoItem);
+
       await produtoRepository.diminuirEstoque(produto.id_produto, item.quantidade, trx);
     }
 
-    // 3) limpar carrinho
     await carrinhoRepository.limparCarrinho(clienteId, trx);
 
     return {
@@ -119,7 +119,7 @@ async function criarPedido(clienteId, enderecoId) {
 // =========================
 // Atualizar status (Admin)
 // =========================
-async function atualizarStatus(pedidoId, status, adminId) {
+async function atualizarStatus(pedidoId, status) {
   const permitido = ["pendente", "processando", "enviado", "entregue", "cancelado"];
   if (!permitido.includes(status)) throw new AppError("Status inválido.", 400);
 
@@ -135,16 +135,21 @@ async function atualizarStatus(pedidoId, status, adminId) {
 async function cancelarPedidoCliente(pedidoId, clienteId) {
   const pedido = await pedidoRepository.getPedido(pedidoId);
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
+
   if (pedido.id_cliente !== clienteId) throw new AppError("Sem permissão.", 403);
+
   if (["cancelado", "entregue"].includes(pedido.status))
     throw new AppError("Não é possível cancelar este pedido.", 400);
 
   return await db.transaction(async (trx) => {
     const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
+
     for (const item of itens) {
       await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
     }
-    return await pedidoRepository.atualizarStatus(pedidoId, "cancelado", trx);
+
+    await pedidoRepository.atualizarStatus(pedidoId, "cancelado", trx);
+    return { mensagem: "Pedido cancelado com sucesso." };
   });
 }
 
@@ -155,23 +160,20 @@ async function cancelarPedidoAdmin(pedidoId) {
   const pedido = await pedidoRepository.getPedido(pedidoId);
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
-  if (["cancelado", "entregue"].includes(pedido.status)) {
+  if (["cancelado", "entregue"].includes(pedido.status))
     throw new AppError("Não é possível cancelar este pedido.", 400);
-  }
 
   return await db.transaction(async (trx) => {
     const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
 
-    // devolve estoque
     for (const item of itens) {
       await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
     }
 
-    // atualiza status
-    return await pedidoRepository.atualizarStatus(pedidoId, "cancelado", trx);
+    await pedidoRepository.atualizarStatus(pedidoId, "cancelado", trx);
+    return { mensagem: "Pedido cancelado pelo admin." };
   });
 }
-
 
 // =========================
 // Atualizar item de pedido
@@ -181,13 +183,15 @@ async function atualizarItemPedido(pedidoId, produtoId, quantidade) {
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   const itensPedido = await pedidoRepository.getItensPedido(pedidoId);
-  const item = itensPedido.find(i => i.id_produto === Number(produtoId));
-  if (!item) throw new AppError("Item de pedido não encontrado.", 404);
+  const item = itensPedido.find((i) => i.id_produto === Number(produtoId));
+
+  if (!item) throw new AppError("Item do pedido não encontrado.", 404);
 
   const produto = await produtoRepository.getProduto(produtoId);
   if (!produto) throw new AppError("Produto não encontrado.", 404);
 
   const diferenca = quantidade - item.quantidade;
+
   if (diferenca > 0) {
     await produtoRepository.diminuirEstoque(produtoId, diferenca);
   } else if (diferenca < 0) {
@@ -196,14 +200,20 @@ async function atualizarItemPedido(pedidoId, produtoId, quantidade) {
 
   await pedidoRepository.atualizarItemPedido(pedidoId, produtoId, quantidade);
 
-  // Atualiza valor_total do pedido
   const itensAtualizados = await pedidoRepository.getItensPedido(pedidoId);
+
   const totalAtualizado = itensAtualizados.reduce(
-    (acc, i) => acc + i.quantidade * Number(i.preco_unitario),
+    (acc, i) => acc + Number(i.quantidade) * Number(i.preco_unitario),
     0
   );
 
-  return { ...pedido, itens: itensAtualizados, valor_total: totalAtualizado };
+  await pedidoRepository.atualizarValorTotal(pedidoId, totalAtualizado);
+
+  return {
+    ...pedido,
+    itens: itensAtualizados,
+    valor_total: totalAtualizado
+  };
 }
 
 // =========================
@@ -214,6 +224,7 @@ async function deletarPedido(pedidoId) {
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   const itens = await pedidoRepository.getItensPedido(pedidoId);
+
   for (const item of itens) {
     await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade);
   }
@@ -221,23 +232,27 @@ async function deletarPedido(pedidoId) {
   await pedidoRepository.deletarPedido(pedidoId);
   return { mensagem: "Pedido deletado com sucesso." };
 }
-async function atualizarPedido(pedidoId, { status, enderecoId, clienteId }) {
+
+// =========================
+// Atualizar pedido (ENDPOINT PRINCIPAL)
+// =========================
+async function atualizarPedido(
+  pedidoId,
+  { status, clienteId, enderecoId, endereco, itens, removerItens }
+)
+ {
   const pedido = await pedidoRepository.getPedido(pedidoId);
   if (!pedido) throw new AppError("Pedido não encontrado.", 404);
 
   return await db.transaction(async (trx) => {
 
-    // ================================
-    // 1) Validar se pode trocar cliente
-    // ================================
+    // 1) Alterar cliente
     if (clienteId) {
-
-      // status que NÃO permitem mudança de cliente
       const bloqueados = ["enviado", "entregue"];
 
       if (bloqueados.includes(pedido.status)) {
         throw new AppError(
-          `Não é possível alterar o cliente de um pedido com status '${pedido.status}'.`,
+          `Não é possível alterar o cliente de pedidos com status '${pedido.status}'.`,
           400
         );
       }
@@ -248,40 +263,128 @@ async function atualizarPedido(pedidoId, { status, enderecoId, clienteId }) {
       await pedidoRepository.atualizarCliente(pedidoId, clienteId, trx);
     }
 
-    // ================================
-    // 2) Atualizar endereço (se enviado)
-    // ================================
+    // 2) Atualizar endereço
     if (enderecoId) {
-      const endereco = await enderecoRepository.getEndereco(enderecoId);
-      if (!endereco) throw new AppError("Endereço não encontrado.", 404);
+      const end = await enderecoRepository.getEndereco(enderecoId);
+      if (!end) throw new AppError("Endereço não encontrado.", 404);
 
       await pedidoRepository.atualizarEndereco(pedidoId, enderecoId, trx);
     }
 
-    // ================================
-    // 3) Atualizar status
-    // ================================
+    if (endereco) {
+      const campos = ["rua", "numero", "bairro", "cidade", "estado", "cep"];
+
+      for (const c of campos) {
+        if (!endereco[c]) {
+          throw new AppError(`Campo '${c}' é obrigatório no endereço.`, 400);
+        }
+      }
+
+      await enderecoRepository.atualizarEnderecoPorPedido(
+        pedidoId,
+        endereco,
+        trx
+      );
+    }
+// 3-A) Remover itens específicos
+if (Array.isArray(removerItens) && removerItens.length > 0) {
+  const itensAtuais = await pedidoRepository.getItensPedido(pedidoId, trx);
+
+  for (const r of removerItens) {
+    const idProduto = Number(r.idProduto);
+    const item = itensAtuais.find(i => i.id_produto === idProduto);
+
+    if (!item) {
+      throw new AppError(
+        `O produto ID ${idProduto} não pertence ao pedido e não pode ser removido.`,
+        400
+      );
+    }
+
+    // Devolver estoque
+    await produtoRepository.aumentarEstoque(idProduto, item.quantidade, trx);
+
+    // Remover item do pedido
+    await pedidoRepository.removerItemPedido(pedidoId, idProduto, trx);
+  }
+
+  // Recalcula o total após as remoções
+  const itensRestantes = await pedidoRepository.getItensPedido(pedidoId, trx);
+
+  const novoTotal = itensRestantes.reduce(
+    (acc, i) => acc + Number(i.quantidade) * Number(i.preco_unitario),
+    0
+  );
+
+  await pedidoRepository.atualizarValorTotal(pedidoId, novoTotal, trx);
+}
+
+    // 3) Atualizar itens
+    if (Array.isArray(itens)) {
+      const itensAtuais = await pedidoRepository.getItensPedido(pedidoId, trx);
+
+      for (const item of itensAtuais) {
+        await produtoRepository.aumentarEstoque(item.id_produto, item.quantidade, trx);
+      }
+
+      await pedidoRepository.removerTodosItensPedido(pedidoId, trx);
+
+      let novoTotal = 0;
+
+      for (const item of itens) {
+        const { idProduto, quantidade } = item;
+
+        const produto = await produtoRepository.getProduto(idProduto, trx);
+
+        if (!produto)
+          throw new AppError(`Produto ID ${idProduto} não encontrado.`, 404);
+
+        if (produto.estoque < quantidade)
+          throw new AppError(`Estoque insuficiente para '${produto.nome}'.`, 400);
+
+        await pedidoRepository.adicionarItemNoPedido(
+          pedidoId,
+          idProduto,
+          quantidade,
+          produto.preco,
+          trx
+        );
+
+        await produtoRepository.diminuirEstoque(idProduto, quantidade, trx);
+
+        novoTotal += Number(produto.preco) * Number(quantidade);
+      }
+
+      await pedidoRepository.atualizarValorTotal(pedidoId, novoTotal, trx);
+    }
+
+    // 4) Atualizar status
     if (status) {
       const validos = ["pendente", "processando", "enviado", "entregue", "cancelado"];
-      if (!validos.includes(status)) {
+
+      if (!validos.includes(status))
         throw new AppError("Status inválido.", 400);
-      }
 
       await pedidoRepository.atualizarStatus(pedidoId, status, trx);
     }
 
-    // ================================
-    // 4) Retornar pedido atualizado
-    // ================================
+    // 5) Retorno final
     const pedidoAtualizado = await pedidoRepository.getPedido(pedidoId, trx);
-    const itens = await pedidoRepository.getItensPedido(pedidoId, trx);
+    const itensAtualizados = await pedidoRepository.getItensPedido(pedidoId, trx);
+    const enderecoFinal = await enderecoRepository.getEndereco(pedidoAtualizado.endereco_id, trx);
 
-    return { ...pedidoAtualizado, itens };
+    return {
+      ...pedidoAtualizado,
+      itens: itensAtualizados,
+      endereco: enderecoFinal
+    };
   });
 }
 
 
-
+// =========================
+// EXPORT
+// =========================
 export default {
   getAllPedidos,
   getPedido,

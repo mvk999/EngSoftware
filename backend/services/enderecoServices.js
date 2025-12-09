@@ -26,7 +26,15 @@ async function getEndereco(idEndereco, userId) {
   return endereco;
 }
 
+async function getEnderecosDoUsuario(idUsuario) {
+  const cliente = await clienteRepository.getCliente(idUsuario);
+  if (!cliente) throw new AppError("Cliente não encontrado.", 404);
+
+  return await enderecoRepository.getEnderecosByUsuario(idUsuario);
+}
+
 export default {
   criarEndereco,
-  getEndereco
+  getEndereco,
+  getEnderecosDoUsuario
 };

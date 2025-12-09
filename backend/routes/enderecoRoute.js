@@ -1,4 +1,3 @@
-// routes/enderecoRoute.js
 import express from "express";
 import enderecoController from "../controllers/enderecoController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
@@ -9,25 +8,29 @@ const router = express.Router();
 
 /**
  * Rotas de Endereço
- * Todas exigem autenticação (cada usuário só gerencia seu próprio endereço)
+ * Todas exigem autenticação
  */
 
-
-
-// Busca endereço específico
+// Lista todos do usuário autenticado
 router.get(
-    "/:id",
-    authMiddleware,
-    validateId("id"),
-    errorBoundary(enderecoController.getEndereco)
+  "/me",
+  authMiddleware,
+  errorBoundary(enderecoController.getMeusEnderecos)
+);
+
+// Buscar endereço específico
+router.get(
+  "/:id",
+  authMiddleware,
+  validateId("id"),
+  errorBoundary(enderecoController.getEndereco)
 );
 
 // Criar novo endereço
 router.post(
-    "/",
-    authMiddleware,
-    errorBoundary(enderecoController.criarEndereco)
+  "/",
+  authMiddleware,
+  errorBoundary(enderecoController.criarEndereco)
 );
-
 
 export default router;

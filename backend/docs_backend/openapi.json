@@ -953,7 +953,7 @@
       },
       "put": {
   "tags": ["Pedido"],
-  "summary": "Atualiza pedido (status, endereço e cliente) — ADMIN",
+  "summary": "Atualiza status, itens, cliente e endereço de um pedido (ADMIN) — RF008",
   "security": [{ "bearerAuth": [] }],
   "parameters": [
     { "$ref": "#/components/parameters/id" }
@@ -967,30 +967,63 @@
           "properties": {
             "status": {
               "type": "string",
-              "enum": ["pendente", "processando", "enviado", "entregue", "cancelado"],
-              "description": "Novo status do pedido"
+              "enum": ["pendente", "processando", "enviado", "entregue", "cancelado"]
             },
-            "enderecoId": {
-              "type": "integer",
-              "description": "Novo endereço associado ao pedido"
+            "itens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "idProduto": { "type": "integer" },
+                  "quantidade": { "type": "integer", "minimum": 1 }
+                },
+                "required": ["idProduto", "quantidade"]
+              }
             },
-            "clienteId": {
-              "type": "integer",
-              "description": "Novo cliente para o pedido (somente permitido se status não for enviado/entregue)"
+            "removerItens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "idProduto": { "type": "integer" }
+                },
+                "required": ["idProduto"]
+              }
+            },
+            "clienteId": { "type": "integer" },
+            "enderecoId": { "type": "integer" },
+            "endereco": {
+              "type": "object",
+              "properties": {
+                "rua": { "type": "string" },
+                "numero": { "type": "string" },
+                "bairro": { "type": "string" },
+                "cidade": { "type": "string" },
+                "estado": { "type": "string" },
+                "cep": { "type": "string" }
+              }
             }
-          },
-          "required": []
+          }
         }
       }
     }
   },
   "responses": {
-    "200": { "description": "Pedido atualizado com sucesso" },
+    "200": {
+      "description": "Pedido atualizado com sucesso",
+      "content": {
+        "application/json": {
+          "schema": { "$ref": "#/components/schemas/Pedido" }
+        }
+      }
+    },
     "400": { "$ref": "#/components/responses/BadRequest" },
-    "404": { "$ref": "#/components/responses/NotFound" },
-    "403": { "$ref": "#/components/responses/Forbidden" }
+    "401": { "$ref": "#/components/responses/Unauthorized" },
+    "403": { "$ref": "#/components/responses/Forbidden" },
+    "404": { "$ref": "#/components/responses/NotFound" }
   }
 },
+
 
       "delete": {
         "tags": ["Pedido"],
@@ -1105,6 +1138,28 @@
     }
   }
 },
+"/endereco/me": {
+  "get": {
+    "tags": ["Endereco"],
+    "summary": "Lista todos os endereços do usuário autenticado",
+    "security": [{ "bearerAuth": [] }],
+    "responses": {
+      "200": {
+        "description": "Lista de endereços do usuário",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Endereco" }
+            }
+          }
+        }
+      },
+      "401": { "$ref": "#/components/responses/Unauthorized" }
+    }
+  }
+},
+
 
 "/endereco/{id}": {
   "get": {
