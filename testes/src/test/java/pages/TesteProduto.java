@@ -45,11 +45,11 @@ public class TesteProduto {
 
 		// === PREENCHER FORMULÁRIO ===
 		produtoPage.preencherFormularioProduto(
-				"Armas",                  // categoria
-				"Produto Teste Selenium",
-				"Descrição teste",
-				"1500",
-				"10"
+				"Periféricos",
+				"Produto Teste",       // nome
+				"Descrição Teste",     // descr
+				"59.90",               // preco
+				"20"                   // estoque
 		);
 
 		Thread.sleep(500);

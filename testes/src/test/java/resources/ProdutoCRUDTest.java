@@ -6,13 +6,18 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import java.time.Duration;
-
 import pages.LoginPage;
 import pages.ProdutoPage;
 import utils.DriverFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.File;
+
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class ProdutoCRUDTest {
+
+	private static final Logger logger = LoggerFactory.getLogger(ProdutoCRUDTest.class);
 
 	private static WebDriver driver;
 	private static ProdutoPage produtoPage;
@@ -21,65 +26,71 @@ public class ProdutoCRUDTest {
 
 	@BeforeAll
 	public static void setUp() {
+		// Cria o diretório de logs fora do target, dentro do projeto
+		File logDir = new File("logs");
+		if (!logDir.exists()) {
+			boolean criado = logDir.mkdirs();
+			if (criado) {
+				System.out.println("Diretório de logs criado: " + logDir.getAbsolutePath());
+			} else {
+				System.out.println("Falha ao criar diretório de logs: " + logDir.getAbsolutePath());
+			}
+		}
+
 		driver = DriverFactory.getDriver();
 		produtoPage = new ProdutoPage(driver);
 		loginPage = new LoginPage(driver);
 		wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+		logger.info("Driver iniciado e páginas carregadas.");
 	}
+
 
 	@AfterAll
 	public static void tearDown() {
 		DriverFactory.quitDriver();
+		logger.info("Driver finalizado.");
 	}
 
 	@Test
 	@Order(1)
 	public void testCadastrarProduto() {
+		logger.info("Iniciando teste: testCadastrarProduto");
 
-		// === LOGIN ===
+		logger.info("Abrindo página de login...");
 		loginPage.abrirPaginaLogin();
-
-		// Esperar input de email ficar visível
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("email-input")));
+		logger.info("Página de login carregada.");
 
-		// Preencher login e senha
+		logger.info("Realizando login...");
 		loginPage.fazerLogin("admin@vought.com", "admin123");
+		logger.info("Login realizado com sucesso.");
 
-		// === ESPERAR A DASHBOARD CARREGAR ===
-		// Você pode esperar por algum elemento exclusivo da dashboard
-		//wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("btn-produto"))); // ajuste para o id real da lateral
-
-		// === CLICAR NA OPÇÃO PRODUTO NA LATERAL ===
-		wait.until(ExpectedConditions.elementToBeClickable(By.id("btn-produto"))); // ajuste para o id real do botão/links
+		wait.until(ExpectedConditions.elementToBeClickable(By.id("btn-produto")));
 		driver.findElement(By.id("btn-produto")).click();
+		logger.info("Botão produtos clicado.");
 
-		// === ESPERAR PÁGINA DE PRODUTOS CARREGAR ===
-		wait.until(ExpectedConditions.elementToBeClickable(By.id("prod-button-admin"))); // ajuste para o id real do botão/links
-		driver.findElement(By.id("prod-button-admin")).click();
+		wait.until(ExpectedConditions.elementToBeClickable(By.id("btn-cadastrar-produto")));
+		driver.findElement(By.id("btn-cadastrar-produto")).click();
+		logger.info("Botão cadastrar produto clicado.");
 
-		// === ABRIR MODAL DE CADASTRO ===
 		produtoPage.abrirModalCadastro();
+		logger.info("Modal de cadastro visível.");
 
-		// Esperar formulário visível
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("nome-produto-input"))); // ajuste se necessário
-
-		// === PREENCHER FORMULÁRIO ===
 		produtoPage.preencherFormularioProduto(
-				"Categoria Teste",
-				"Produto Automação",
-				"Criado via Selenium",
+				"Periféricos",
+				"Produto Teste",
+				"Descrição Teste",
 				"59.90",
 				"20"
 		);
 
-		// === CONFIRMAR CADASTRO ===
 		produtoPage.confirmarCadastro();
 
-		// === VALIDAR POPUP ===
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("popup-sucesso"))); // ajuste se necessário
-		Assertions.assertTrue(produtoPage.validarPopupSucesso(), "O popup de sucesso NÃO apareceu!");
+		boolean popupValido = produtoPage.validarPopupSucesso();
+		logger.info("Popup de sucesso validado: {}", popupValido);
 
-		// === FECHAR POPUP ===
+		Assertions.assertTrue(popupValido, "O popup de sucesso NÃO apareceu!");
 		produtoPage.fecharPopup();
 	}
 }
